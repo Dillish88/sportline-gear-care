@@ -14,8 +14,8 @@ No backend, no database, no build step. Open the file in a browser and it works.
 ## What's in here
 
 ```
-index.html            the customer page — dark banner header, light form, ~75 KB
-gear-care.html        the same booking flow in the neon/brass styling, ~148 KB
+index.html            the customer page  — plain, light, ~49 KB
+gear-care.html        the same booking flow in the dark brand styling, ~148 KB
 SPEC.md               decisions, screens, rates, open questions
 assets/
   sportline-neon.mp4  hero background loop, used by gear-care.html only
@@ -25,10 +25,8 @@ assets/
 **Two customer pages, same booking flow, two visual treatments.** Both are live
 so they can be compared on a real phone before one is retired.
 
-- `index.html` — full-bleed Sportline banner across the top, then system fonts and
-  white cards. No webfonts, no video. Fewest decisions on screen. Built for someone
-  standing at a court. The counter-drop path is written as a conversation — it asks
-  the shop to confirm price and stock rather than pretending to be a booking.
+- `index.html` — system fonts, white cards, the real Sportline logo. No webfonts,
+  no video. Fewest decisions on screen. Built for someone standing at a court.
 - `gear-care.html` — embedded Cormorant and Manrope, neon sign in the hero,
   dark brass palette, fuller price tables and a how-it-works section.
 
@@ -137,11 +135,6 @@ no API — a task for whoever maintains it.
 
 **One page should eventually win.** Running both is fine for comparison, not for
 maintenance — the two booking forms will drift the first time a price changes.
-`gear-care.html` has not had the conversational rewrite; `index.html` has.
-
-**`og:image` points at sportlinestores.com.** Until the custom domain is set up,
-WhatsApp link previews on the `.vercel.app` address will not find the image.
-Update the four `og:` URLs in both pages once the real domain is live.
 
 ---
 

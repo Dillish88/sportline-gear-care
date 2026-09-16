@@ -1,0 +1,936 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="_ds/modernist-2036b657-d0ec-4ad5-b8a6-93e401e40f3a/styles.css">
+  <script src="_ds/modernist-2036b657-d0ec-4ad5-b8a6-93e401e40f3a/_ds_bundle.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;800&display=swap">
+  <style>
+    body{margin:0;background:var(--color-bg);color:var(--color-text);font-family:var(--font-body)}
+    a{color:var(--color-accent-700);text-decoration:none}
+    a:hover{color:var(--color-accent)}
+    *{box-sizing:border-box}
+  </style>
+</helmet>
+
+<div style="padding:32px 28px 56px;max-width:1180px">
+
+  <div style="display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:6px">
+    <h1 style="font-family:var(--font-heading);font-weight:800;font-size:34px;line-height:1.1;margin:0">Gear Care — scan, book, track</h1>
+    <span class="tag tag-outline">Prototype</span>
+  </div>
+  <p style="max-width:68ch;margin:0 0 20px;font-size:15px;line-height:1.55;opacity:.85">Scan the QR on the shop counter or a court poster, book a restring, a bat job or a whole academy's set, choose door pickup, and follow it to your door. Staff side prints the tag that keeps your racket attached to your job.</p>
+  <hr class="hr">
+
+  <div style="display:flex;gap:36px;align-items:flex-start;flex-wrap:wrap">
+
+    <div style="flex:0 0 240px;min-width:200px;display:flex;flex-direction:column;gap:var(--space-4)">
+      <div>
+        <p style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--color-accent);margin:0 0 8px">Customer</p>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <sc-for list="{{ custNav }}" as="s" hint-placeholder-count="6">
+            <button class="btn btn-secondary btn-block" style="margin-top:0" onClick="{{ s.go }}">{{ s.label }}</button>
+          </sc-for>
+        </div>
+      </div>
+      <div>
+        <p style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--color-accent);margin:0 0 8px">Staff / bench</p>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <sc-for list="{{ staffNav }}" as="s" hint-placeholder-count="4">
+            <button class="btn btn-secondary btn-block" style="margin-top:0" onClick="{{ s.go }}">{{ s.label }}</button>
+          </sc-for>
+        </div>
+      </div>
+      <div style="border-top:2px solid var(--color-divider);padding-top:var(--space-3);font-size:12px;line-height:1.5;opacity:.75">
+        <p style="margin:0 0 6px"><strong>Job</strong> {{ jobId }}</p>
+        <p style="margin:0">Stage — {{ stageName }}</p>
+      </div>
+    </div>
+
+    <div style="flex:0 0 auto;display:flex;flex-direction:column;gap:10px">
+      <div style="display:flex;align-items:baseline;gap:10px">
+        <p style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;margin:0;opacity:.6">{{ screenTitle }}</p>
+        <p style="font-size:11px;margin:0;opacity:.45">390 × 760</p>
+      </div>
+
+      <div style="width:390px;height:760px;border:2px solid var(--color-text);background:var(--color-bg);display:flex;flex-direction:column;overflow:hidden">
+
+        <div style="display:flex;align-items:center;gap:8px;padding:10px 16px;border-bottom:2px solid var(--color-divider);flex:none">
+          <img src="assets/sportline-mark.png" alt="Sportline" style="height:22px;width:auto;display:block">
+          <span style="width:2px;height:14px;background:var(--color-accent)"></span>
+          <span style="font-size:11px;letter-spacing:.08em;text-transform:uppercase;opacity:.6">Gear Care</span>
+          <span style="margin-left:auto;font-size:11px;opacity:.5">{{ headerRight }}</span>
+        </div>
+
+        <div style="flex:1;overflow-y:auto;padding:20px 16px 24px">
+
+          <sc-if value="{{ isScan }}" hint-placeholder-val="{{ true }}">
+            <div>
+              <p class="card-kicker" style="margin:0 0 10px">Scanned · 6th Avenue counter</p>
+              <h2 style="font-family:var(--font-heading);font-weight:800;font-size:28px;line-height:1.08;margin:0 0 12px">Your racket restrung.<br>Your bat knocked in.</h2>
+              <p style="font-size:14px;line-height:1.55;margin:0 0 18px;opacity:.85">We collect from your door across Anna Nagar and Kilpauk, do the work at the bench, and bring it back. 2–3 days.</p>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:2px;background:var(--color-divider);border:2px solid var(--color-divider);margin-bottom:18px">
+                <div style="background:var(--color-bg);padding:12px">
+                  <p style="margin:0;font-size:11px;letter-spacing:.08em;text-transform:uppercase;opacity:.55">Restring from</p>
+                  <p style="margin:2px 0 0;font-family:var(--font-heading);font-weight:800;font-size:20px">₹550</p>
+                </div>
+                <div style="background:var(--color-bg);padding:12px">
+                  <p style="margin:0;font-size:11px;letter-spacing:.08em;text-transform:uppercase;opacity:.55">Bat work from</p>
+                  <p style="margin:2px 0 0;font-family:var(--font-heading);font-weight:800;font-size:20px">₹100</p>
+                </div>
+                <div style="background:var(--color-bg);padding:12px">
+                  <p style="margin:0;font-size:11px;letter-spacing:.08em;text-transform:uppercase;opacity:.55">Turnaround</p>
+                  <p style="margin:2px 0 0;font-family:var(--font-heading);font-weight:800;font-size:20px">2–3 days</p>
+                </div>
+                <div style="background:var(--color-bg);padding:12px">
+                  <p style="margin:0;font-size:11px;letter-spacing:.08em;text-transform:uppercase;opacity:.55">Pay</p>
+                  <p style="margin:2px 0 0;font-family:var(--font-heading);font-weight:800;font-size:20px">On delivery</p>
+                </div>
+              </div>
+              <button class="btn btn-primary btn-block" style="min-height:48px" onClick="{{ goService }}">Start a job</button>
+              <button class="btn btn-secondary btn-block" style="min-height:48px" onClick="{{ goTrack }}">Track an existing job</button>
+              <p style="font-size:12px;line-height:1.5;margin:16px 0 0;opacity:.6">No app to install, no sign-up. We only need your number so the rider and WhatsApp updates can reach you.</p>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ isService }}" hint-placeholder-val="{{ false }}">
+            <div>
+              <p class="card-kicker" style="margin:0 0 8px">Step 1 of 4</p>
+              <h2 style="font-family:var(--font-heading);font-weight:800;font-size:22px;margin:0 0 16px">What needs doing?</h2>
+
+              <div class="seg" style="width:100%;margin-bottom:var(--space-4)">
+                <label class="seg-opt" style="flex:1;justify-content:flex-start">
+                  <input type="radio" name="svc" value="string" checked="{{ svcIsString }}" onChange="{{ pickString }}">
+                  Badminton restring
+                </label>
+                <label class="seg-opt" style="flex:1;justify-content:flex-start">
+                  <input type="radio" name="svc" value="bat" checked="{{ svcIsBat }}" onChange="{{ pickBat }}">
+                  Bat care
+                </label>
+                <label class="seg-opt" style="flex:1;justify-content:flex-start">
+                  <input type="radio" name="svc" value="bulk" checked="{{ svcIsBulk }}" onChange="{{ pickBulk }}">
+                  Academy / bulk
+                </label>
+              </div>
+
+              <sc-if value="{{ svcIsBulk }}" hint-placeholder-val="{{ false }}">
+                <div>
+                  <p style="font-size:12.5px;line-height:1.5;margin:0 0 14px;opacity:.8">One pickup, one job code, a separate tag on every item. Tell us the counts — we confirm the sheet before we collect.</p>
+                  <div class="field" style="margin-bottom:var(--space-3)">
+                    <label for="acad">Academy, school or club</label>
+                    <input class="input" id="acad" style="min-height:44px" placeholder="e.g. Anna Nagar Badminton Academy" onInput="{{ setAcademy }}">
+                  </div>
+                  <div class="field" style="margin-bottom:var(--space-4)">
+                    <label for="gstin">GSTIN — optional, for a tax invoice</label>
+                    <input class="input" id="gstin" style="min-height:44px" placeholder="33XXXXXXXXXXXZX" onInput="{{ setGstin }}">
+                  </div>
+
+                  <sc-for list="{{ bulkRows }}" as="r" hint-placeholder-count="3">
+                    <div style="border-bottom:1px solid var(--color-divider);padding:14px 0">
+                      <div style="display:flex;gap:12px;align-items:flex-start">
+                        <span style="flex:1;font-size:13px;line-height:1.45"><strong style="font-size:14px">{{ r.nm }}</strong><br><span style="opacity:.7">{{ r.ds }}</span></span>
+                        <span style="text-align:right;white-space:nowrap;font-family:var(--font-heading);font-weight:800;font-size:14px">{{ r.unit }}<br><span style="font-family:var(--font-body);font-weight:400;font-size:11px;opacity:.55">each</span></span>
+                      </div>
+                      <div style="display:flex;align-items:center;gap:10px;margin-top:10px">
+                        <button class="btn btn-secondary" style="width:44px;height:44px;padding:0;justify-content:center" onClick="{{ r.minus }}">−</button>
+                        <span style="font-family:var(--font-heading);font-weight:800;font-size:18px;min-width:28px;text-align:center">{{ r.qty }}</span>
+                        <button class="btn btn-secondary" style="width:44px;height:44px;padding:0;justify-content:center" onClick="{{ r.plus }}">+</button>
+                        <span style="margin-left:auto;font-size:12.5px;opacity:.7">{{ r.lineText }}</span>
+                      </div>
+                    </div>
+                  </sc-for>
+
+                  <div class="field" style="margin-top:var(--space-4)">
+                    <label for="bulkStr">String for the rackets</label>
+                    <select class="input" id="bulkStr" style="min-height:44px" onChange="{{ setString }}">
+                      <sc-for list="{{ strings }}" as="s" hint-placeholder-count="10">
+                        <option value="{{ s.i }}">{{ s.text }}</option>
+                      </sc-for>
+                    </select>
+                  </div>
+                  <div style="background:var(--color-surface);padding:var(--space-3);margin-top:var(--space-4);font-size:12.5px;line-height:1.5">
+                    <strong style="display:block;margin-bottom:4px">{{ slabText }}</strong>
+                    {{ slabNote }}
+                  </div>
+                </div>
+              </sc-if>
+
+              <sc-if value="{{ svcIsString }}" hint-placeholder-val="{{ true }}">
+                <div>
+                  <div class="field" style="margin-bottom:var(--space-4)">
+                    <label for="strSel">String — price includes string and labour</label>
+                    <select class="input" id="strSel" style="min-height:44px" onChange="{{ setString }}">
+                      <sc-for list="{{ strings }}" as="s" hint-placeholder-count="10">
+                        <option value="{{ s.i }}">{{ s.text }}</option>
+                      </sc-for>
+                    </select>
+                  </div>
+                  <div class="field" style="margin-bottom:var(--space-4)">
+                    <label for="ten">Tension — {{ tension }} lbs</label>
+                    <input type="range" id="ten" min="18" max="30" step="1" style="width:100%;height:44px;accent-color:var(--color-accent)" onInput="{{ setTension }}">
+                    <p style="font-size:12px;margin:0;opacity:.65">Most club players sit between 22 and 26 lbs. Tell us in the notes if your frame has a stated maximum.</p>
+                  </div>
+                  <label style="display:flex;gap:12px;align-items:flex-start;border-top:1px solid var(--color-divider);padding:14px 0;cursor:pointer">
+                    <input type="checkbox" style="width:18px;height:18px;margin-top:2px;accent-color:var(--color-accent)" onChange="{{ toggleGrip }}">
+                    <span style="font-size:13px;line-height:1.45"><strong style="font-size:14px">Fit a new grip while it's with us</strong><br><span style="opacity:.7">Fitting is free. You pay only for the grip, at counter price.</span></span>
+                  </label>
+                </div>
+              </sc-if>
+
+              <sc-if value="{{ svcIsBat }}" hint-placeholder-val="{{ false }}">
+                <div>
+                  <p style="font-size:12px;margin:0 0 8px;opacity:.7">Pick everything that applies. A new bat wants knocking-in plus a toe guard.</p>
+                  <sc-for list="{{ batJobs }}" as="b" hint-placeholder-count="7">
+                    <label style="display:flex;gap:12px;align-items:flex-start;border-bottom:1px solid var(--color-divider);padding:13px 0;cursor:pointer">
+                      <input type="checkbox" style="width:18px;height:18px;margin-top:2px;accent-color:var(--color-accent)" onChange="{{ b.toggle }}">
+                      <span style="font-size:13px;line-height:1.45;flex:1"><strong style="font-size:14px">{{ b.nm }}</strong><br><span style="opacity:.7">{{ b.ds }}</span></span>
+                      <span style="font-family:var(--font-heading);font-weight:800;font-size:15px">{{ b.price }}</span>
+                    </label>
+                  </sc-for>
+                  <label style="display:flex;gap:12px;align-items:flex-start;padding:13px 0;cursor:pointer">
+                    <input type="checkbox" style="width:18px;height:18px;margin-top:2px;accent-color:var(--color-accent)" onChange="{{ toggleCrack }}">
+                    <span style="font-size:13px;line-height:1.45;flex:1"><strong style="font-size:14px">Crack binding / repair</strong><br><span style="opacity:.7">We inspect first, then quote. Nothing charged without your approval.</span></span>
+                    <span class="tag tag-accent" style="white-space:nowrap">On inspection</span>
+                  </label>
+                </div>
+              </sc-if>
+
+              <button class="btn btn-primary btn-block" style="min-height:48px;margin-top:var(--space-4)" onClick="{{ goDetails }}">Next — your details</button>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ isDetails }}" hint-placeholder-val="{{ false }}">
+            <div>
+              <p class="card-kicker" style="margin:0 0 8px">Step 2 of 4</p>
+              <h2 style="font-family:var(--font-heading);font-weight:800;font-size:22px;margin:0 0 16px">Where do we collect from?</h2>
+              <div class="field" style="margin-bottom:var(--space-3)">
+                <label for="nm">Your name</label>
+                <input class="input" id="nm" style="min-height:44px" placeholder="Name" autocomplete="name" onInput="{{ setName }}">
+              </div>
+              <div class="field" style="margin-bottom:var(--space-3)">
+                <label for="ph">Mobile — 10 digits, WhatsApp updates go here</label>
+                <input class="input" id="ph" type="tel" inputmode="numeric" style="min-height:44px" placeholder="98xxxxxxxx" autocomplete="tel-national" onInput="{{ setPhone }}">
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-3);margin-bottom:var(--space-3)">
+                <div class="field">
+                  <label for="area">Area</label>
+                  <select class="input" id="area" style="min-height:44px" onChange="{{ setArea }}">
+                    <option>Anna Nagar</option>
+                    <option>Kilpauk</option>
+                    <option>Other nearby</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="shop">Shop</label>
+                  <select class="input" id="shop" style="min-height:44px" onChange="{{ setShop }}">
+                    <option>6th Avenue</option>
+                    <option>5th Avenue</option>
+                  </select>
+                </div>
+              </div>
+              <div class="field" style="margin-bottom:var(--space-3)">
+                <label for="addr">Pickup address</label>
+                <textarea class="input" id="addr" style="min-height:76px" placeholder="Door number, street, and a landmark the rider will know" onInput="{{ setAddr }}"></textarea>
+              </div>
+              <div class="field" style="margin-bottom:var(--space-4)">
+                <label for="slot">Pickup slot</label>
+                <select class="input" id="slot" style="min-height:44px" onChange="{{ setSlot }}">
+                  <option>Today, 6–8 pm</option>
+                  <option>Tomorrow, 9–11 am</option>
+                  <option>Tomorrow, 6–8 pm</option>
+                  <option>This weekend</option>
+                </select>
+              </div>
+              <button class="btn btn-primary btn-block" style="min-height:48px" onClick="{{ goLogistics }}">Next — pickup and drop</button>
+              <div style="border:2px solid var(--color-divider);padding:var(--space-3);margin-top:var(--space-4)">
+                <p style="font-size:13px;line-height:1.5;margin:0 0 10px"><strong>Easier to say it than type it?</strong><br><span style="opacity:.8">Send a voice note on WhatsApp — what needs doing, how many, where from. We write the job card for you and send it back to confirm. Useful for an academy sending twelve rackets.</span></p>
+                <button class="btn btn-secondary btn-block" style="min-height:48px;margin-top:0" onClick="{{ sendVoice }}">Send a voice note instead</button>
+              </div>
+              <button class="btn btn-ghost btn-block" style="min-height:44px" onClick="{{ goService }}">Back</button>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ isLogistics }}" hint-placeholder-val="{{ false }}">
+            <div>
+              <p class="card-kicker" style="margin:0 0 8px">Step 3 of 4</p>
+              <h2 style="font-family:var(--font-heading);font-weight:800;font-size:22px;margin:0 0 6px">Who moves it?</h2>
+              <p style="font-size:13px;line-height:1.5;margin:0 0 16px;opacity:.8">Pickup and return are two trips, so the fare counts twice. Partner fares are estimates — we confirm the real figure on WhatsApp before a rider leaves.</p>
+
+              <sc-for list="{{ partners }}" as="p" hint-placeholder-count="6">
+                <label style="display:flex;gap:12px;align-items:flex-start;border-bottom:1px solid var(--color-divider);padding:14px 0;cursor:pointer">
+                  <span class="radio" style="align-items:flex-start;margin-top:2px">
+                    <input type="radio" name="mode" checked="{{ p.checked }}" onChange="{{ p.pick }}">
+                    <span class="dot"></span>
+                  </span>
+                  <span style="flex:1;font-size:13px;line-height:1.45">
+                    <strong style="font-size:14px">{{ p.nm }}</strong>
+                    <sc-if value="{{ p.badge }}" hint-placeholder-val="{{ false }}"><span class="tag tag-accent" style="margin-left:6px">{{ p.badge }}</span></sc-if>
+                    <br><span style="opacity:.7">{{ p.ds }}</span>
+                  </span>
+                  <span style="text-align:right;white-space:nowrap">
+                    <span style="font-family:var(--font-heading);font-weight:800;font-size:15px">{{ p.fareText }}</span>
+                    <br><span style="font-size:11px;opacity:.55">{{ p.fareNote }}</span>
+                  </span>
+                </label>
+              </sc-for>
+
+              <div style="border:2px solid var(--color-divider);padding:var(--space-3);margin-top:var(--space-4)">
+                <p style="font-size:11px;letter-spacing:.08em;text-transform:uppercase;margin:0 0 8px;opacity:.6">Both legs</p>
+                <div style="display:flex;justify-content:space-between;font-size:13px;padding:3px 0"><span>Pickup from you</span><span>{{ legText }}</span></div>
+                <div style="display:flex;justify-content:space-between;font-size:13px;padding:3px 0"><span>Return to you</span><span>{{ legText }}</span></div>
+              </div>
+
+              <button class="btn btn-primary btn-block" style="min-height:48px;margin-top:var(--space-4)" onClick="{{ goReview }}">Next — check the total</button>
+              <button class="btn btn-ghost btn-block" style="min-height:44px" onClick="{{ goDetails }}">Back</button>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ isReview }}" hint-placeholder-val="{{ false }}">
+            <div>
+              <p class="card-kicker" style="margin:0 0 8px">Step 4 of 4</p>
+              <h2 style="font-family:var(--font-heading);font-weight:800;font-size:22px;margin:0 0 16px">What it comes to</h2>
+              <sc-for list="{{ lines }}" as="l" hint-placeholder-count="4">
+                <div style="display:flex;justify-content:space-between;gap:12px;font-size:13px;padding:8px 0;border-bottom:1px solid var(--color-divider)">
+                  <span style="opacity:.85">{{ l.label }}</span>
+                  <span style="white-space:nowrap;font-weight:500">{{ l.right }}</span>
+                </div>
+              </sc-for>
+              <div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px;border-top:2px solid var(--color-divider);margin-top:var(--space-3);padding-top:var(--space-3)">
+                <span style="font-size:11px;letter-spacing:.08em;text-transform:uppercase;opacity:.6">Estimate<br>Pay on delivery</span>
+                <span style="font-family:var(--font-heading);font-weight:800;font-size:36px;line-height:1">{{ totalText }}</span>
+              </div>
+
+              <div style="background:var(--color-surface);padding:var(--space-3);margin-top:var(--space-4);font-size:12.5px;line-height:1.5">
+                <strong style="display:block;margin-bottom:4px">If your gear gets damaged</strong>
+                We photograph it at your door, at the bench, and before it goes back. Anything that happens in transit we settle from those photos.
+              </div>
+              <label style="display:flex;gap:12px;align-items:flex-start;padding:14px 0;cursor:pointer">
+                <input type="checkbox" style="width:18px;height:18px;margin-top:2px;accent-color:var(--color-accent)" onChange="{{ toggleAgree }}">
+                <span style="font-size:13px">I've read this and I'm fine with it</span>
+              </label>
+              <p style="font-size:13px;color:var(--color-accent-700);font-weight:500;margin:0 0 8px">{{ reviewError }}</p>
+              <button class="btn btn-primary btn-block" style="min-height:48px" onClick="{{ submit }}">Submit and start the job</button>
+              <p style="font-size:12px;margin:10px 0 0;opacity:.6">You'll get a WhatsApp confirmation with your job code and a link you can reopen any time.</p>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ isDone }}" hint-placeholder-val="{{ false }}">
+            <div>
+              <div style="background:var(--color-accent);color:var(--color-bg);padding:var(--space-4);margin:-20px -16px var(--space-4)">
+                <p style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;margin:0 0 8px;opacity:.85">Booked</p>
+                <p style="font-family:var(--font-heading);font-weight:800;font-size:30px;line-height:1;margin:0">{{ jobId }}</p>
+                <p style="font-size:13px;margin:10px 0 0;line-height:1.5">A rider is assigned for {{ slot }}. Keep the racket or bat with its cover if it has one.</p>
+              </div>
+              <p style="font-size:11px;letter-spacing:.08em;text-transform:uppercase;margin:0 0 10px;opacity:.6">Progress</p>
+              <sc-for list="{{ stages }}" as="s" hint-placeholder-count="6">
+                <div style="display:flex;gap:12px;align-items:flex-start;padding:10px 0;border-bottom:1px solid var(--color-divider)">
+                  <span style="font-family:var(--font-heading);font-weight:800;font-size:12px;width:20px;opacity:.5">{{ s.n }}</span>
+                  <span style="flex:1;font-size:13.5px;font-weight:500">{{ s.nm }}</span>
+                  <span style="font-size:11.5px;opacity:.65;white-space:nowrap">{{ s.state }}</span>
+                </div>
+              </sc-for>
+              <div style="border:2px solid var(--color-divider);padding:var(--space-3);margin-top:var(--space-4);font-size:12.5px;line-height:1.5">
+                <strong style="display:block;margin-bottom:4px">Your tag: {{ jobId }}</strong>
+                The bench prints this code on a sticker and ties it to your {{ itemWord }} the moment it's collected. Every update you get is read off that tag.
+              </div>
+              <button class="btn btn-secondary btn-block" style="min-height:48px;margin-top:var(--space-4)" onClick="{{ goTrack }}">Open the tracking view</button>
+              <button class="btn btn-ghost btn-block" style="min-height:44px" onClick="{{ goScan }}">Book something else</button>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ isTrack }}" hint-placeholder-val="{{ false }}">
+            <div>
+              <p class="card-kicker" style="margin:0 0 8px">Tracking · {{ jobId }}</p>
+              <h2 style="font-family:var(--font-heading);font-weight:800;font-size:22px;margin:0 0 4px">{{ stageName }}</h2>
+              <p style="font-size:13px;margin:0 0 18px;opacity:.8">{{ stageBlurb }}</p>
+              <div style="display:flex;gap:3px;margin-bottom:var(--space-4)">
+                <sc-for list="{{ stages }}" as="s" hint-placeholder-count="6">
+                  <span style="flex:1;height:6px;background:{{ s.bar }}"></span>
+                </sc-for>
+              </div>
+              <sc-for list="{{ stages }}" as="s" hint-placeholder-count="6">
+                <div style="display:flex;gap:12px;align-items:flex-start;padding:10px 0;border-bottom:1px solid var(--color-divider)">
+                  <span style="font-family:var(--font-heading);font-weight:800;font-size:12px;width:20px;opacity:.5">{{ s.n }}</span>
+                  <span style="flex:1;font-size:13.5px;font-weight:500">{{ s.nm }}</span>
+                  <span style="font-size:11.5px;opacity:.65;white-space:nowrap">{{ s.state }}</span>
+                </div>
+              </sc-for>
+              <div style="background:var(--color-surface);padding:var(--space-3);margin-top:var(--space-4);font-size:12.5px;line-height:1.55">
+                <strong style="display:block;margin-bottom:4px">{{ jobSummary }}</strong>
+                {{ modeSummary }} · Amount due on delivery {{ totalText }}
+              </div>
+              <button class="btn btn-secondary btn-block" style="min-height:48px;margin-top:var(--space-4)" onClick="{{ goQueue }}">See the bench view</button>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ isQueue }}" hint-placeholder-val="{{ false }}">
+            <div>
+              <p class="card-kicker" style="margin:0 0 8px">Bench · 6th Avenue</p>
+              <h2 style="font-family:var(--font-heading);font-weight:800;font-size:22px;margin:0 0 14px">Today's jobs</h2>
+              <sc-for list="{{ queue }}" as="q" hint-placeholder-count="4">
+                <button style="display:block;width:100%;text-align:left;background:none;border:0;border-bottom:1px solid var(--color-divider);padding:13px 0;cursor:pointer;font:inherit" onClick="{{ q.open }}">
+                  <span style="display:flex;gap:10px;align-items:baseline">
+                    <span style="font-family:var(--font-heading);font-weight:800;font-size:14px">{{ q.id }}</span>
+                    <span style="flex:1;font-size:13px;opacity:.85">{{ q.who }}</span>
+                    <span class="tag tag-neutral">{{ q.stage }}</span>
+                  </span>
+                  <span style="display:block;font-size:12.5px;margin-top:4px;opacity:.7">{{ q.what }}</span>
+                </button>
+              </sc-for>
+              <p style="font-size:12px;line-height:1.5;margin:16px 0 0;opacity:.65">Tap a job to print its tag, move it along, or tell the customer it's done.</p>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ isJob }}" hint-placeholder-val="{{ false }}">
+            <div>
+              <p class="card-kicker" style="margin:0 0 8px">Bench · job card</p>
+              <h2 style="font-family:var(--font-heading);font-weight:800;font-size:26px;margin:0 0 2px">{{ jobId }}</h2>
+              <p style="font-size:13px;margin:0 0 16px;opacity:.8">{{ jobSummary }}</p>
+              <table class="table" style="margin-bottom:var(--space-4)">
+                <tbody>
+                  <tr><td style="width:38%;opacity:.6">Customer</td><td>{{ nameOut }}</td></tr>
+                  <tr><td style="opacity:.6">Mobile</td><td>{{ phoneOut }}</td></tr>
+                  <tr><td style="opacity:.6">Pickup</td><td>{{ areaOut }} · {{ slot }}</td></tr>
+                  <tr><td style="opacity:.6">Moving it</td><td>{{ modeSummary }}</td></tr>
+                  <tr><td style="opacity:.6">Due on delivery</td><td>{{ totalText }}</td></tr>
+                  <tr><td style="opacity:.6">Stage</td><td>{{ stageName }}</td></tr>
+                  <tr><td style="opacity:.6">Items</td><td>{{ itemCount }}</td></tr>
+                </tbody>
+              </table>
+              <div style="border-left:3px solid var(--color-accent);background:var(--color-surface);padding:var(--space-3);margin-bottom:var(--space-4);font-size:12.5px;line-height:1.5">
+                <strong style="display:block;margin-bottom:2px">Voice note · 0:38</strong>
+                Customer described the job on WhatsApp. Play it, then correct the card above — the tags print from the card, not the note.
+              </div>
+              <button class="btn btn-primary btn-block" style="min-height:48px" onClick="{{ goLabel }}">Print the gear tag</button>
+              <button class="btn btn-secondary btn-block" style="min-height:48px" onClick="{{ advance }}">{{ advanceLabel }}</button>
+              <button class="btn btn-secondary btn-block" style="min-height:48px" onClick="{{ goWa }}">Send the "work done" message</button>
+              <button class="btn btn-ghost btn-block" style="min-height:44px" onClick="{{ goQueue }}">Back to the queue</button>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ isLabel }}" hint-placeholder-val="{{ false }}">
+            <div>
+              <p class="card-kicker" style="margin:0 0 8px">Label printer · 50 × 25 mm</p>
+              <h2 style="font-family:var(--font-heading);font-weight:800;font-size:22px;margin:0 0 6px">Tag the gear</h2>
+              <p style="font-size:13px;line-height:1.5;margin:0 0 16px;opacity:.8">One tag per item. Loop it through the grip or the toe, scan it back at every stage — that scan is what stops a mismatch.</p>
+
+              <sc-for list="{{ labels }}" as="lb" hint-placeholder-count="1">
+                <div style="border:2px solid var(--color-text);background:#fff;padding:10px;display:flex;gap:10px;margin-bottom:12px">
+                  <div style="flex:1;min-width:0">
+                    <p style="font-family:var(--font-heading);font-weight:800;font-size:17px;line-height:1;margin:0 0 2px;color:#201e1d">{{ lb.id }}</p>
+                    <p style="font-size:10px;letter-spacing:.06em;text-transform:uppercase;margin:0 0 6px;color:#201e1d">{{ lb.kind }}</p>
+                    <p style="font-size:11px;line-height:1.35;margin:0;color:#201e1d">{{ lb.spec }}</p>
+                    <p style="font-size:11px;line-height:1.35;margin:0;color:#201e1d">{{ lb.who }}</p>
+                    <p style="font-size:10px;margin:4px 0 0;color:#201e1d;opacity:.7">{{ lb.foot }}</p>
+                  </div>
+                  <div style="flex:none;width:62px;height:62px;border:2px solid #201e1d;display:grid;place-items:center;font-size:9px;letter-spacing:.08em;color:#201e1d;text-align:center;line-height:1.2">QR<br>{{ lb.id }}</div>
+                </div>
+              </sc-for>
+
+              <div style="border:2px solid var(--color-divider);padding:var(--space-3);font-size:12.5px;line-height:1.55">
+                <strong style="display:block;margin-bottom:4px">Two tags, one job</strong>
+                The sticker goes on the gear; the tear-off half goes in the tray slot. Both carry {{ jobId }}, so a racket can only ever be handed back against its own code. A bulk job tags every item separately — {{ jobId }}-01, -02, -03 — under one collection.
+              </div>
+
+              <button class="btn btn-primary btn-block" style="min-height:48px;margin-top:var(--space-4)" onClick="{{ printLabel }}">Print {{ labelCount }}</button>
+              <button class="btn btn-ghost btn-block" style="min-height:44px" onClick="{{ goJob }}">Back to the job card</button>
+              <p style="font-size:12px;margin:10px 0 0;opacity:.6">{{ printNote }}</p>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ isWa }}" hint-placeholder-val="{{ false }}">
+            <div>
+              <p class="card-kicker" style="margin:0 0 8px">WhatsApp · to {{ phoneOut }}</p>
+              <h2 style="font-family:var(--font-heading);font-weight:800;font-size:22px;margin:0 0 14px">Work done — message out</h2>
+              <div style="background:var(--color-surface);padding:var(--space-3);font-size:13px;line-height:1.6;white-space:pre-wrap;border-left:3px solid var(--color-accent)">{{ waText }}</div>
+              <button class="btn btn-primary btn-block" style="min-height:48px;margin-top:var(--space-4)" onClick="{{ sendWa }}">Open WhatsApp with this typed</button>
+              <button class="btn btn-ghost btn-block" style="min-height:44px" onClick="{{ goJob }}">Back to the job card</button>
+              <div style="border-top:2px solid var(--color-divider);margin-top:var(--space-4);padding-top:var(--space-3);font-size:12px;line-height:1.55;opacity:.75">
+                Manual send today — same wa.me trick the live page uses, so it needs no backend. Moving to the WhatsApp Business Platform would fire this automatically on the stage change, and would need an approved template plus a server.
+              </div>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ isMoney }}" hint-placeholder-val="{{ false }}">
+            <div>
+              <p class="card-kicker" style="margin:0 0 8px">Bench · what a job keeps</p>
+              <h2 style="font-family:var(--font-heading);font-weight:800;font-size:22px;margin:0 0 6px">This job: {{ totalText }} in</h2>
+              <p style="font-size:13px;line-height:1.5;margin:0 0 14px;opacity:.8">{{ jobSummary }}</p>
+              <table class="table" style="margin-bottom:var(--space-4)">
+                <tbody>
+                  <sc-for list="{{ stack }}" as="r" hint-placeholder-count="7">
+                    <tr>
+                      <td style="opacity:.75">{{ r.k }}</td>
+                      <td style="text-align:right;white-space:nowrap;font-weight:500">{{ r.v }}</td>
+                    </tr>
+                  </sc-for>
+                </tbody>
+              </table>
+              <div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px;border-top:2px solid var(--color-divider);padding-top:var(--space-3)">
+                <span style="font-size:11px;letter-spacing:.08em;text-transform:uppercase;opacity:.6">You keep<br>{{ keepPct }}</span>
+                <span style="font-family:var(--font-heading);font-weight:800;font-size:36px;line-height:1">{{ keepText }}</span>
+              </div>
+
+              <p style="font-size:11px;letter-spacing:.08em;text-transform:uppercase;margin:var(--space-6) 0 8px;opacity:.6">Every service, per job</p>
+              <table class="table">
+                <thead><tr><th>Service</th><th style="text-align:right">Price</th><th style="text-align:right">Keeps</th></tr></thead>
+                <tbody>
+                  <sc-for list="{{ ledger }}" as="l" hint-placeholder-count="9">
+                    <tr>
+                      <td style="font-size:12.5px">{{ l.nm }}</td>
+                      <td style="text-align:right;font-size:12.5px">{{ l.price }}</td>
+                      <td style="text-align:right;font-weight:500;font-size:12.5px;color:{{ l.tone }}">{{ l.keep }}</td>
+                    </tr>
+                  </sc-for>
+                </tbody>
+              </table>
+              <p style="font-size:12px;line-height:1.5;margin:12px 0 0;opacity:.7">Every figure after GST at {{ gstLabel }}, direct cost, and {{ autoText }} of running cost loaded on each job. Estimates — the string reel cost is still unconfirmed.</p>
+
+              <p style="font-size:11px;letter-spacing:.08em;text-transform:uppercase;margin:var(--space-6) 0 8px;opacity:.6">Running cost, loaded per job</p>
+              <table class="table">
+                <tbody>
+                  <sc-for list="{{ autoRows }}" as="a" hint-placeholder-count="6">
+                    <tr>
+                      <td style="font-size:12.5px"><strong>{{ a.nm }}</strong><br><span style="opacity:.65">{{ a.ds }}</span></td>
+                      <td style="text-align:right;white-space:nowrap;font-size:12.5px">{{ a.v }}</td>
+                    </tr>
+                  </sc-for>
+                </tbody>
+              </table>
+              <button class="btn btn-ghost btn-block" style="min-height:44px;margin-top:var(--space-4)" onClick="{{ goJob }}">Back to the job card</button>
+            </div>
+          </sc-if>
+
+        </div>
+      </div>
+    </div>
+
+    <div style="flex:1 1 260px;min-width:240px;font-size:13px;line-height:1.6">
+      <p style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--color-accent);margin:0 0 10px">Calls I made</p>
+      <ul style="margin:0 0 var(--space-6);padding-left:18px">
+        <li>No sign-in. Phone number is the identity; the job link is the account.</li>
+        <li>Own rider is free inside 3 km of the shop and is offered first — it is the cheapest leg you control.</li>
+        <li>Partner fares are shown per leg, twice, labelled estimate. The ₹40–90 tiers in the repo are placeholders until real trips are logged.</li>
+        <li>Pay on delivery stays the default; no gateway in this pass.</li>
+        <li>Completion message is staff-triggered, pre-typed. Automatic sending needs the Business Platform.</li>
+        <li>Label is 50 × 25 mm thermal: job code, service, spec, customer, and a QR that reopens the job card.</li>
+      </ul>
+      <p style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--color-accent);margin:0 0 10px">Open questions</p>
+      <ul style="margin:0;padding-left:18px">
+        <li>Real Porter / Rapido fares for the three shops — five logged trips would replace every estimate here.</li>
+        <li>GST on services is still 0% in the till. A public page quoting ₹1,200 with pickup is a bigger exposure than a ₹100 oiling.</li>
+        <li>Purasaiwalkam parked until the address and number exist. Two shops in the app for now.</li>
+        <li>Label printer: sized for a 50 mm direct-thermal roll. Zebra ZD230 or TSC TE200 class.</li>
+      </ul>
+    </div>
+
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;ownDeliveryFee&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:0,&quot;tsType&quot;:&quot;number&quot;,&quot;min&quot;:0,&quot;max&quot;:150,&quot;unit&quot;:&quot;₹&quot;,&quot;section&quot;:&quot;Delivery&quot;},&quot;gstRate&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:18,&quot;options&quot;:[0,5,18],&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Money&quot;},&quot;labelWide&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Label printer&quot;}}">
+const STRINGS = [
+  ["Yonex BG65", 550], ["Yonex BG65 Titanium", 650], ["Yonex BG66 Ultimax", 750],
+  ["Yonex Nanogy 95", 750], ["Yonex BG80", 850], ["Yonex BG80 Power", 850],
+  ["Yonex Exbolt 63", 1100], ["Yonex Aero Sonic", 1100],
+  ["Yonex Exbolt 65 / 68", 1200], ["Yonex Aero Bite Boost", 1200]
+];
+
+const BAT = [
+  ["knock-hand", "Knocking-in, by hand", "Six to eight hours of mallet work.", 650],
+  ["knock-mach", "Knocking-in, by machine", "Faster and more even. Best for English willow.", 850],
+  ["weight", "Weight reducing", "Shaved down and re-balanced.", 250],
+  ["oiling", "Oiling", "Raw linseed on the face and edges.", 100],
+  ["toe", "Toe guard", "Stops water damage at the base.", 100],
+  ["scuff", "Anti-scuff sheet", "Protects the face from surface cracks.", 150],
+  ["fibre", "Fibre tape", "Edge and shoulder reinforcement.", 150]
+];
+
+const STAGES = ["Booked", "Collected", "At the bench", "Work done", "Out for return", "Delivered"];
+
+const BLURB = [
+  "A rider is assigned. Keep the gear ready in its cover.",
+  "Picked up and photographed at your door.",
+  "On the bench. We send a photo when the work is done.",
+  "Finished and checked. Return trip being booked.",
+  "With the rider, on the way back to you.",
+  "Handed back. Thanks — see you at the shop."
+];
+
+// Running cost loaded on every job. Monthly figures ÷ 30 jobs a month.
+const RUN = [
+  ["WhatsApp messages", "4 utility templates at \u20b90.145 each (Meta, India, Jan 2026 rate)", 0.58],
+  ["WhatsApp platform fee", "BSP subscription \u2248 \u20b91,000/month \u00f7 30 jobs", 33],
+  ["Label + roll", "50 \u00d7 25 mm direct thermal, \u20b9350 per 1,000", 0.35],
+  ["Label printer", "\u20b915,000 over 5 years \u00f7 30 jobs a month", 8],
+  ["Hosting / page", "GitHub Pages free; \u20b9400/month if it moves to a server", 13],
+  ["UPI / cash handling", "UPI is free; cash costs a trip to the bank", 1]
+];
+
+// Direct cost per service — labour at ₹40/hr helper, ₹86/hr skilled.
+const LEDGER = [
+  ["Restring \u2014 BG65", 550, 137],
+  ["Restring \u2014 Exbolt 65", 1200, 252],
+  ["Knocking-in, hand", 650, 290],
+  ["Knocking-in, machine", 850, 95],
+  ["Weight reducing", 250, 70],
+  ["Oiling", 100, 25],
+  ["Toe guard", 100, 40],
+  ["Anti-scuff sheet", 150, 60],
+  ["Fibre tape", 150, 60],
+  ["Bat bundle \u2014 machine + toe + scuff", 1100, 195]
+];
+
+const SCREEN_TITLES = {
+  scan: "Scan landing", service: "Service picker", details: "Your details",
+  logistics: "Pickup & drop", review: "Review & submit", done: "Booked",
+  track: "Tracking", queue: "Bench queue", job: "Job card",
+  label: "Gear tag", wa: "Work-done message", money: "What a job keeps"
+};
+
+class Component extends DCLogic {
+  state = {
+    screen: "scan", svc: "string", strIdx: 0, tension: 24, grip: false,
+    bat: {}, crack: false, agree: false, err: "",
+    name: "", phone: "", area: "Anna Nagar", shop: "6th Avenue",
+    // Purasaiwalkam parked — no address or number yet.
+    addr: "", slot: "Today, 6–8 pm", mode: "own", stage: 0, printed: false,
+    academy: "", gstin: "", qty: { rackets: 8, pkg: 0, basic: 0 }
+  };
+
+  slab() {
+    const n = this.state.qty.rackets;
+    return n >= 12 ? 50 : n >= 5 ? 25 : 0;
+  }
+
+  bulkDefs() {
+    const strPrice = STRINGS[this.state.strIdx][1];
+    const d = this.slab();
+    return [
+      { k: "rackets", nm: "Rackets to restring", ds: "Same string and tension across the set unless you tell us otherwise.", unit: strPrice - d },
+      { k: "pkg", nm: "Bats — ready to play", ds: "Machine knocking-in, toe guard, anti-scuff, grip fitted, oiled.", unit: this.state.qty.pkg >= 5 ? 1150 : 1250 },
+      { k: "basic", nm: "Bats — oil and toe guard", ds: "End-of-season tidy-up. No knocking-in.", unit: 200 }
+    ];
+  }
+
+  bulkItems() {
+    const out = [];
+    this.bulkDefs().forEach(d => {
+      const n = this.state.qty[d.k] || 0;
+      for (let i = 0; i < n; i++) out.push({ kind: d.k, nm: d.nm, unit: d.unit });
+    });
+    return out;
+  }
+
+  rupee(n) { return "\u20b9" + Number(n).toLocaleString("en-IN"); }
+
+  go(s) { return () => this.setState({ screen: s, err: "" }); }
+
+  partnerList() {
+    const own = this.props.ownDeliveryFee ?? 0;
+    return [
+      { k: "own", nm: "Sportline rider", ds: "Our own boy on the scooter. You are 1.8 km from 6th Avenue.", fare: own, badge: "Nearby", note: own === 0 ? "free" : "per leg" },
+      { k: "porter", nm: "Porter", ds: "Booked by us. Two-wheeler, receipted fare.", fare: 75, badge: "", note: "est. per leg" },
+      { k: "dunzo", nm: "Dunzo", ds: "Fastest in Anna Nagar on a weekday evening.", fare: 70, badge: "", note: "est. per leg" },
+      { k: "rapido", nm: "Rapido", ds: "Usually the cheapest. Captain carries it on the bike.", fare: 60, badge: "", note: "est. per leg" },
+      { k: "ola", nm: "Ola", ds: "Fallback when the others have no rider.", fare: 65, badge: "", note: "est. per leg" },
+      { k: "drop", nm: "I'll come to the shop", ds: "Drop it at the counter, collect it there. No fare either way.", fare: 0, badge: "", note: "no charge" }
+    ];
+  }
+
+  currentPartner() { return this.partnerList().find(p => p.k === this.state.mode); }
+
+  serviceLines() {
+    const out = [];
+    if (this.state.svc === "bulk") {
+      const d = this.slab();
+      this.bulkDefs().forEach(x => {
+        const n = this.state.qty[x.k] || 0;
+        if (n) out.push({ label: n + " × " + x.nm.toLowerCase(), amt: n * x.unit });
+      });
+      if (d) out.push({ label: "Bulk rate applied", amt: null, note: "\u20b9" + d + " off each racket" });
+      if (!out.length) out.push({ label: "Nothing counted yet", amt: null, note: "add items above" });
+      return out;
+    }
+    if (this.state.svc === "string") {
+      const s = STRINGS[this.state.strIdx];
+      out.push({ label: s[0] + " at " + this.state.tension + " lbs", amt: s[1] });
+      if (this.state.grip) out.push({ label: "New grip fitted", amt: null, note: "grip at counter price, fitting free" });
+    } else {
+      BAT.forEach(b => { if (this.state.bat[b[0]]) out.push({ label: b[1], amt: b[3] }); });
+      if (this.state.crack) out.push({ label: "Crack binding / repair", amt: null, note: "quoted after inspection" });
+    }
+    return out;
+  }
+
+  allLines() {
+    const out = this.serviceLines();
+    const p = this.currentPartner();
+    if (p.fare > 0) {
+      out.push({ label: "Pickup — " + p.nm, amt: p.fare, est: true });
+      out.push({ label: "Return — " + p.nm, amt: p.fare, est: true });
+    } else {
+      out.push({ label: p.k === "drop" ? "You drop and collect" : "Pickup and return — our rider", amt: null, note: p.k === "drop" ? "no delivery charge" : "free inside 3 km" });
+    }
+    return out;
+  }
+
+  total() { return this.allLines().reduce((t, l) => t + (l.amt || 0), 0); }
+
+  jobSummary() {
+    if (this.state.svc === "bulk") {
+      const n = this.bulkItems().length;
+      return (this.state.academy.trim() || "Academy / bulk") + " \u00b7 " + n + " item" + (n === 1 ? "" : "s") + ", one pickup";
+    }
+    if (this.state.svc === "string") {
+      const s = STRINGS[this.state.strIdx];
+      return "Badminton restring \u00b7 " + s[0] + " at " + this.state.tension + " lbs";
+    }
+    const picked = BAT.filter(b => this.state.bat[b[0]]).map(b => b[1]);
+    if (this.state.crack) picked.push("crack repair");
+    return "Cricket bat care \u00b7 " + (picked.length ? picked.join(", ") : "nothing picked yet");
+  }
+
+  waText() {
+    const L = ["*Sportline \u2014 your gear is ready*", ""];
+    L.push("Job " + this.jobId());
+    L.push(this.jobSummary());
+    L.push("");
+    L.push("Done and checked at the bench. Bench photos are on this thread.");
+    const p = this.currentPartner();
+    L.push(p.k === "drop"
+      ? "Ready at the " + this.state.shop + " counter whenever you are."
+      : "Return trip: " + p.nm + ", today between 6 and 8 pm.");
+    L.push("Amount due on delivery: " + this.rupee(this.total()) + (p.fare > 0 ? " (delivery at actual)" : ""));
+    L.push("");
+    L.push("Reply HOLD if you want us to keep it at the shop instead.");
+    return L.join("\n");
+  }
+
+  jobId() { return "SL-" + (this.state.svc === "string" ? "B" : this.state.svc === "bulk" ? "A" : "C") + "2417"; }
+
+  renderVals() {
+    const st = this.state;
+    const p = this.currentPartner();
+    const total = this.total();
+    const name = st.name.trim() || "Not given yet";
+    const phone = st.phone.replace(/\D/g, "") || "98xxxxxxxx";
+    const itemWord = st.svc === "string" ? "racket" : "bat";
+    const wide = this.props.labelWide ?? false;
+
+    const stages = STAGES.map((nm, i) => ({
+      n: String(i + 1).padStart(2, "0"),
+      nm,
+      state: i < st.stage ? "Done" : i === st.stage ? "Now" : "\u2014",
+      bar: i <= st.stage ? "var(--color-accent)" : "var(--color-divider)"
+    }));
+
+    return {
+      jobId: this.jobId(),
+      screenTitle: SCREEN_TITLES[st.screen] || "",
+      headerRight: st.screen === "queue" || st.screen === "job" || st.screen === "label" || st.screen === "wa"
+        ? "Staff \u00b7 Shankar" : this.jobId(),
+      isScan: st.screen === "scan", isService: st.screen === "service", isDetails: st.screen === "details",
+      isLogistics: st.screen === "logistics", isReview: st.screen === "review", isDone: st.screen === "done",
+      isTrack: st.screen === "track", isQueue: st.screen === "queue", isJob: st.screen === "job",
+      isLabel: st.screen === "label", isWa: st.screen === "wa", isMoney: st.screen === "money",
+
+      custNav: [
+        { label: "1 · Scan landing", go: this.go("scan") },
+        { label: "2 · Service", go: this.go("service") },
+        { label: "3 · Details", go: this.go("details") },
+        { label: "4 · Pickup & drop", go: this.go("logistics") },
+        { label: "5 · Review", go: this.go("review") },
+        { label: "6 · Booked & track", go: this.go("done") }
+      ],
+      staffNav: [
+        { label: "7 · Bench queue", go: this.go("queue") },
+        { label: "8 · Job card", go: this.go("job") },
+        { label: "9 · Print gear tag", go: this.go("label") },
+        { label: "10 · Work-done message", go: this.go("wa") },
+        { label: "11 · What a job keeps", go: this.go("money") }
+      ],
+
+      svcIsString: st.svc === "string", svcIsBat: st.svc === "bat",
+      pickString: () => this.setState({ svc: "string" }),
+      pickBat: () => this.setState({ svc: "bat" }),
+      pickBulk: () => this.setState({ svc: "bulk" }),
+      svcIsBulk: st.svc === "bulk",
+      setAcademy: e => this.setState({ academy: e.target.value }),
+      setGstin: e => this.setState({ gstin: e.target.value }),
+      bulkRows: this.bulkDefs().map(d => {
+        const n = st.qty[d.k] || 0;
+        const step = v => () => { const q = Object.assign({}, this.state.qty); q[d.k] = Math.max(0, (q[d.k] || 0) + v); this.setState({ qty: q }); };
+        return {
+          nm: d.nm, ds: d.ds, qty: n, unit: this.rupee(d.unit),
+          lineText: n ? this.rupee(n * d.unit) : "—",
+          plus: step(1), minus: step(-1)
+        };
+      }),
+      slabText: this.slab() ? "Bulk rate: \u20b9" + this.slab() + " off each racket" : "Bulk rate starts at 5 rackets",
+      slabNote: this.slab()
+        ? "Twelve or more and it is \u20b950 off each. One pickup covers the whole set, so the delivery cost is split across every item instead of riding on one racket."
+        : "5\u201311 rackets takes \u20b925 off each, 12 or more takes \u20b950 off each. The saving comes from one trip instead of twelve, not from cutting the string.",
+      itemCount: st.svc === "bulk" ? this.bulkItems().length + " tagged items" : "1 item",
+      sendVoice: () => {
+        const t = "*Sportline \u2014 Gear Care*\n\nI'd rather send a voice note. Here is what I need doing:";
+        window.open("https://wa.me/918056436668?text=" + encodeURIComponent(t), "_blank", "noopener");
+      },
+      strings: STRINGS.map((s, i) => ({ i, text: s[0] + " \u2014 " + this.rupee(s[1]) })),
+      setString: e => this.setState({ strIdx: Number(e.target.value) }),
+      tension: st.tension,
+      setTension: e => this.setState({ tension: Number(e.target.value) }),
+      toggleGrip: e => this.setState({ grip: e.target.checked }),
+      batJobs: BAT.map(b => ({
+        nm: b[1], ds: b[2], price: this.rupee(b[3]),
+        toggle: e => { const bat = Object.assign({}, this.state.bat); bat[b[0]] = e.target.checked; this.setState({ bat }); }
+      })),
+      toggleCrack: e => this.setState({ crack: e.target.checked }),
+
+      setName: e => this.setState({ name: e.target.value }),
+      setPhone: e => this.setState({ phone: e.target.value }),
+      setArea: e => this.setState({ area: e.target.value }),
+      setShop: e => this.setState({ shop: e.target.value }),
+      setAddr: e => this.setState({ addr: e.target.value }),
+      setSlot: e => this.setState({ slot: e.target.value }),
+      slot: st.slot, areaOut: st.area, nameOut: name, phoneOut: phone, itemWord,
+
+      partners: this.partnerList().map(x => ({
+        nm: x.nm, ds: x.ds, badge: x.badge,
+        checked: x.k === st.mode,
+        fareText: x.fare === 0 ? "Free" : this.rupee(x.fare),
+        fareNote: x.note,
+        pick: () => this.setState({ mode: x.k })
+      })),
+      legText: p.fare === 0 ? (p.k === "drop" ? "\u2014" : "Free") : this.rupee(p.fare) + " est.",
+      modeSummary: p.k === "drop" ? "Counter drop-off, both ways" : p.nm + ", both legs",
+
+      lines: this.allLines().map(l => ({
+        label: l.label,
+        right: l.amt === null ? l.note : (l.est ? "est. " : "") + this.rupee(l.amt)
+      })),
+      totalText: this.rupee(total),
+      reviewError: st.err,
+      toggleAgree: e => this.setState({ agree: e.target.checked }),
+      submit: () => {
+        const miss = [];
+        if (!st.name.trim()) miss.push("your name");
+        if (!/^[6-9]\d{9}$/.test(st.phone.replace(/\D/g, ""))) miss.push("a valid 10-digit mobile");
+        if (st.mode !== "drop" && !st.addr.trim()) miss.push("a pickup address");
+        if (st.svc === "bat" && !BAT.some(b => st.bat[b[0]]) && !st.crack) miss.push("at least one bat job");
+        if (st.svc === "bulk" && !this.bulkItems().length) miss.push("at least one item counted");
+        if (st.svc === "bulk" && !st.academy.trim()) miss.push("the academy or school name");
+        if (!st.agree) miss.push("a tick on the damage note");
+        if (miss.length) { this.setState({ err: "Still need " + miss.join(", ") + "." }); return; }
+        this.setState({ screen: "done", stage: 0, err: "" });
+      },
+
+      stages,
+      stageName: STAGES[st.stage],
+      stageBlurb: BLURB[st.stage],
+      jobSummary: this.jobSummary(),
+
+      queue: [
+        { id: this.jobId(), who: name === "Not given yet" ? "This booking" : name, what: this.jobSummary(), stage: STAGES[st.stage], open: this.go("job") },
+        { id: "SL-B2416", who: "Vignesh R.", what: "Badminton restring \u00b7 BG80 at 26 lbs", stage: "At the bench", open: this.go("job") },
+        { id: "SL-C2415", who: "Ashok Kumar", what: "Cricket bat care \u00b7 machine knocking-in, toe guard", stage: "Work done", open: this.go("job") },
+        { id: "SL-B2414", who: "Priya S.", what: "Badminton restring \u00b7 Exbolt 65 at 25 lbs", stage: "Out for return", open: this.go("job") }
+      ],
+
+      advance: () => this.setState({ stage: Math.min(st.stage + 1, STAGES.length - 1) }),
+      advanceLabel: st.stage >= STAGES.length - 1 ? "Job closed" : "Move to \u201c" + STAGES[st.stage + 1] + "\u201d",
+
+      labelCount: (() => {
+        const n = st.svc === "bulk" ? this.bulkItems().length : wide ? 2 : 1;
+        return n + (n === 1 ? " tag" : " tags");
+      })(),
+      printNote: st.printed
+        ? "Sent to the bench printer. Tag " + this.jobId() + " queued."
+        : "Prints on the 50 mm thermal roll at the bench. Nothing leaves the shop untagged.",
+      printLabel: () => this.setState({ printed: true }),
+      labels: st.svc === "bulk"
+        ? this.bulkItems().map((it, i) => ({
+            id: this.jobId() + "-" + String(i + 1).padStart(2, "0"),
+            kind: it.kind === "rackets" ? "BADMINTON \u00b7 RESTRING" : "CRICKET \u00b7 BAT CARE",
+            spec: it.kind === "rackets"
+              ? STRINGS[st.strIdx][0] + " \u00b7 " + st.tension + " lbs"
+              : it.kind === "pkg" ? "Ready to play \u2014 full prep" : "Oil + toe guard",
+            who: (st.academy.trim() || "Academy") + " \u00b7 " + phone.slice(-4),
+            foot: "Item " + (i + 1) + " of " + this.bulkItems().length + " \u00b7 " + st.shop + " \u00b7 " + this.rupee(it.unit)
+          }))
+        : [{
+            id: this.jobId(),
+            kind: st.svc === "string" ? "BADMINTON \u00b7 RESTRING" : "CRICKET \u00b7 BAT CARE",
+            spec: st.svc === "string"
+              ? STRINGS[st.strIdx][0] + " \u00b7 " + st.tension + " lbs"
+              : (BAT.filter(b => st.bat[b[0]]).map(b => b[1]).join(", ") || "jobs to be confirmed"),
+            who: name + " \u00b7 " + phone.slice(-4),
+            foot: st.shop + " \u00b7 " + st.slot + " \u00b7 due " + this.rupee(total)
+          }],
+
+      stack: (() => {
+        const gst = this.props.gstRate ?? 18;
+        const run = RUN.reduce((t, r) => t + r[2], 0);
+        const collected = total;
+        const tax = collected - collected / (1 + gst / 100);
+        let mat = 0, lab = 0;
+        if (st.svc === "bulk") {
+          this.bulkItems().forEach(it => {
+            if (it.kind === "rackets") { mat += Math.round(STRINGS[st.strIdx][1] * 0.14) + 5; lab += 45; }
+            else if (it.kind === "pkg") { mat += 50; lab += 45; }
+            else { mat += 40; lab += 25; }
+          });
+        } else if (st.svc === "string") {
+          mat = Math.round(STRINGS[st.strIdx][1] * 0.14) + 5;
+          lab = 45;
+        } else {
+          const COST = { "knock-hand": [10, 280], "knock-mach": [50, 45], weight: [10, 60], oiling: [15, 10], toe: [25, 15], scuff: [45, 15], fibre: [40, 20] };
+          BAT.forEach(b => { if (st.bat[b[0]]) { mat += COST[b[0]][0]; lab += COST[b[0]][1]; } });
+        }
+        const rider = p.fare > 0 ? Math.round(p.fare / 1.18 * 2) : (p.k === "own" ? 35 : 0);
+        const keep = collected - tax - mat - lab - rider - run - 12;
+        this._keep = keep; this._collected = collected;
+        return [
+          { k: "Customer pays", v: this.rupee(collected) },
+          { k: "GST inside it, at " + gst + "%", v: "\u2212" + this.rupee(Math.round(tax)) },
+          { k: "String / materials", v: "\u2212" + this.rupee(mat) },
+          { k: "Labour at the bench", v: "\u2212" + this.rupee(lab) },
+          { k: p.fare > 0 ? "Rider, both legs (ex-GST)" : p.k === "own" ? "Our own rider, fuel + time" : "No delivery", v: "\u2212" + this.rupee(rider) },
+          { k: "Machine wear", v: "\u2212" + this.rupee(12) },
+          { k: "Running cost, loaded", v: "\u2212" + this.rupee(Math.round(run)) }
+        ];
+      })(),
+      keepText: this.rupee(Math.round(this._keep || 0)),
+      keepPct: this._collected ? Math.round((this._keep / this._collected) * 100) + "% of what they pay" : "",
+      gstLabel: (this.props.gstRate ?? 18) + "%",
+      autoText: this.rupee(Math.round(RUN.reduce((t, r) => t + r[2], 0))),
+      autoRows: RUN.map(r => ({ nm: r[0], ds: r[1], v: r[2] < 1 ? "\u20b9" + r[2].toFixed(2) : this.rupee(r[2]) })),
+      ledger: LEDGER.map(l => {
+        const gst = this.props.gstRate ?? 18;
+        const run = RUN.reduce((t, r) => t + r[2], 0);
+        const keep = Math.round(l[1] / (1 + gst / 100) - l[2] - run);
+        return {
+          nm: l[0], price: this.rupee(l[1]),
+          keep: (keep < 0 ? "\u2212" : "") + this.rupee(Math.abs(keep)),
+          tone: keep < 60 ? "var(--color-accent)" : "var(--color-text)"
+        };
+      }),
+
+      waText: this.waText(),
+      sendWa: () => window.open("https://wa.me/91" + this.state.phone.replace(/\D/g, "") + "?text=" + encodeURIComponent(this.waText()), "_blank", "noopener"),
+
+      goScan: this.go("scan"), goService: this.go("service"), goDetails: this.go("details"),
+      goLogistics: this.go("logistics"), goReview: this.go("review"), goTrack: this.go("track"),
+      goQueue: this.go("queue"), goJob: this.go("job"), goLabel: this.go("label"), goWa: this.go("wa")
+    };
+  }
+}
+</script>
+</body>
+</html>

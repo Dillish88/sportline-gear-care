@@ -1,160 +1,146 @@
 # Sportline — Gear Care
 
-Pickup-and-drop booking page for badminton restringing and cricket bat care,
-covering Anna Nagar, Kilpauk and Purasaiwalkam.
+Badminton restringing and cricket bat care, booked online. Anna Nagar, Chennai.
 
-A customer scans a QR code, fills the form, and taps one button. That opens
-WhatsApp with the whole order already written out, addressed to the right shop.
-Staff book the delivery rider manually and run the job from that WhatsApp thread.
+A customer scans a QR code or opens the link, fills a short form, and taps one
+button. WhatsApp opens with the whole order written out and addressed to the
+shop. Staff reply, arrange collection if needed, and run the job from that
+thread.
 
-No backend, no database, no build step. Open `index.html` in a browser and it works.
+No backend, no database, no build step. Open the file in a browser and it works.
 
 ---
 
-## Structure
+## What's in here
 
 ```
-sportline-gear-care/
-├── index.html                    the entire page — CSS, JS, fonts, images all inline
-├── assets/
-│   └── sportline-neon.mp4        optional hero background loop (~648 KB)
-└── README.md
+index.html            the customer page  — plain, light, ~49 KB
+gear-care.html        the same booking flow in the dark brand styling, ~148 KB
+SPEC.md               decisions, screens, rates, open questions
+assets/
+  sportline-neon.mp4  hero background loop, used by gear-care.html only
+  og-gear-care.jpg    link-preview image for WhatsApp and social shares
 ```
 
-`index.html` is deliberately self-contained. Fonts (Cormorant Garamond,
-Manrope — subsetted) and the neon sign image are embedded as base64, so the
-page makes **zero external requests** and loads in one round trip.
+**Two customer pages, same booking flow, two visual treatments.** Both are live
+so they can be compared on a real phone before one is retired.
 
-The video is the single exception. At 648 KB it would have tripled the page
-weight if inlined, so it ships as a separate file and is loaded conditionally
-(see below). **If `assets/` is missing, the page still works** — the still
-image stays in place.
+- `index.html` — system fonts, white cards, the real Sportline logo. No webfonts,
+  no video. Fewest decisions on screen. Built for someone standing at a court.
+- `gear-care.html` — embedded Cormorant and Manrope, neon sign in the hero,
+  dark brass palette, fuller price tables and a how-it-works section.
+
+Both are fully self-contained: fonts and images are embedded as base64, so
+**neither page makes any external request**. The only exception is
+`sportline-neon.mp4`, which is too large to inline and is loaded by
+`gear-care.html` only on wide screens, on a good connection, with motion
+allowed. If the file is missing the page falls back to a still image.
+
+A separate staff app (bench queue, job statuses, tag printing, string stock)
+lives outside this repo as a Claude artifact, and is organisation-internal.
 
 ---
 
 ## Deploying
 
-Any static host. No server, no build.
+Any static host. No server, no build command, no output directory.
 
-**Vercel or Netlify** — connect this repo, deploy on push. Free at this volume.
-**GitHub Pages** — Settings → Pages → deploy from `main`.
-**Own hosting** — upload `index.html` and `assets/` preserving the folder layout.
+**Vercel** — import the repo, leave every setting at its default, deploy. Every
+push redeploys automatically.
 
-The page looks for the video at exactly `assets/sportline-neon.mp4` relative to
-itself. Keep that path or the video silently won't load (the still remains).
+Keep the `assets/` folder path exactly as it is; the pages reference it
+relative to themselves.
 
 ---
 
 ## QR codes
 
-A QR code is just a URL. The page reads four query parameters on load and
-prefills itself, so you can print a different code for each location:
+A QR code is just a URL. Both pages read query parameters on load and prefill
+themselves, so a different code can be printed for each location.
 
 | Parameter | Values | Effect |
 |---|---|---|
 | `svc` | `string`, `bat` | Preselects the service |
-| `shop` | `6th`, `5th`, `pur` | Preselects the shop, and routes the WhatsApp message to that shop's number |
-| `area` | `Anna Nagar`, `Kilpauk`, `Purasaiwalkam`, `Other nearby` | Preselects the area |
+| `move` | `pickup` | Preselects rider collection instead of counter drop |
+| `area` | `Anna Nagar`, `Kilpauk`, `Other nearby` | Preselects the area |
 | `src` | any short label | Rides into the WhatsApp message as a `Ref:` line |
 
-Examples:
-
 ```
-/index.html?svc=string&shop=6th&src=court-poster
-/index.html?svc=string&shop=5th&area=Anna%20Nagar&src=counter-5th
-/index.html?svc=bat&shop=6th&src=academy-noticeboard
+/?svc=string&src=court-poster
+/?svc=bat&src=academy-noticeboard
+/?move=pickup&area=Kilpauk&src=kilpauk-flyer
 ```
 
-`src` is the cheapest marketing measurement available here — it tells you which
-poster actually produced each order. Use a distinct value per printed item.
+Give every printed item its own `src`. It is the cheapest marketing measurement
+available here — after a month you know which poster produced which orders.
 
-Print QR codes at 3 cm minimum and always print the URL underneath; a real
-share of people won't scan.
+Print at 3 cm minimum, error correction level H, and always print the URL
+underneath. Test the printed code, not the screen. Never use a QR shortener: a
+dead code on a printed poster cannot be fixed.
 
 ---
 
 ## WhatsApp
 
 No API and no integration. The button builds a `wa.me` link with the order
-URL-encoded into the `text` parameter, which opens WhatsApp with the message
-pre-typed.
+URL-encoded into the `text` parameter, so WhatsApp opens with the message
+already typed.
 
-**The customer still has to press send.** Nothing leaves the page by itself. If
-they abandon at that step you never learn they were interested — that is the
-main cost of this approach, and the main reason to move to the WhatsApp
-Business Platform later.
+**The customer still has to press send.** Nothing leaves the page by itself.
+That is the main cost of this approach, and the main reason to move to the
+WhatsApp Business Platform later.
 
-Shop routing is in `SHOPS` at the top of the script block:
-
-| Shop | Number |
-|---|---|
-| Anna Nagar 6th Avenue | 918056436668 |
-| Anna Nagar 5th Avenue | 919677056668 |
-| Purasaiwalkam | 918056436668 — placeholder, see below |
+Messages go to the 6th Avenue number, `918056436668`.
 
 ---
 
-## Hero video loading
+## Rates
 
-The video only downloads when **all** of these hold:
+Full board in `SPEC.md`. Two things to know when editing:
 
-- viewport is 820px or wider
-- `navigator.connection.effectiveType` is not 2g or 3g
-- data-saver mode is off
-- the visitor has not requested reduced motion
+- Stringing is billed **all in** — string and labour together, not separately.
+- **Service rates are inclusive of tax.** Delivery is charged separately.
 
-On a phone at a badminton court it never downloads. Everyone gets the CSS neon
-glow and flicker, which cost nothing and also switch off under reduced motion.
-
----
-
-## Prices
-
-From the Sportline price board. Stringing is billed **all-in** — string and
-labour together, not separately. Grip **fitting is free**; the grip itself is
-sold at counter price.
-
-Stringing runs ₹550 (BG65) to ₹1,200 (Exbolt 65/68). Bat work: hand knocking-in
-₹650, machine ₹850, weight reducing ₹250, oiling ₹100, toe guard ₹100,
-anti-scuff ₹150, fibre tape ₹150. Crack binding is quoted after inspection.
-
-Prices live in two places and **must be changed in both**: the `<select id="strSel">`
-options and the `BAT` array in the script, plus the price-list tables lower down
-the page.
+Rates live in two places on each page and must be changed in both: the string
+`<select>` and the `BAT` array in the script, plus the price tables further
+down.
 
 ---
 
-## Open items before this goes public
+## The shop
 
-1. **Purasaiwalkam address and phone.** The footer says "Address to be added"
-   and its WhatsApp currently routes to the 6th Avenue number.
+All stringing and bat work happens at the **6th Avenue bench**. 5th Avenue takes
+drop-offs and hands finished gear back. Purasaiwalkam is not in the app until
+its address and phone number exist.
 
-2. **Delivery fees are placeholder.** The `LEG` table (₹40–90 per leg) is
-   invented. Run five real rider trips across the three shops and replace them
-   with actual fares. Charged on both legs, so two legs at real Chennai rates
-   could be ₹150–250 — on a ₹550 restring that is a third of the bill, and it
-   is the number that decides whether this service is viable.
+A restring takes about 30 minutes on the machine. Normal turnaround is one to
+two hours; the pages promise **same day**, deliberately, so the promise survives
+a busy Saturday.
 
-3. **GST on services.** Services are currently billed at 0% in the till,
-   pending the SAC question. A public page advertising ₹1,200 stringing with
-   pickup is a larger exposure than an in-shop ₹100 oiling. Settle this with
-   whoever files the returns before printing QR codes.
+---
 
-4. **`og:image` is not set.** WhatsApp and social shares of this link show no
-   preview picture. Needs a real hosted image file (~1200×630) at a real URL —
-   a base64 image cannot do this.
+## Open
 
-5. **Design system divergence.** This page uses a dark brass-and-neon system
-   with serif display type. `quotes.html` and `stringing.html` use the older
-   light system (system fonts, red/charcoal/white, flat white cards). Either
-   bring those across or accept that this page reads as a separate sub-brand.
+**Rider fares are placeholders.** The per-leg table (₹40–90 by area, charged on
+both legs) is invented. Log five real trips and replace it. Every price on the
+page is labelled "est." until then, and the exact figure is confirmed on
+WhatsApp before a rider leaves. **This is the last thing to fix before printing
+QR codes.**
+
+**The till should state tax-inclusive too**, matching the website. In-house app,
+no API — a task for whoever maintains it.
+
+**Two rates to re-confirm with Shankar:** BG80 is ₹950 while BG80 Power is still
+₹850, and machine knocking is priced 60% above hand.
+
+**One page should eventually win.** Running both is fine for comparison, not for
+maintenance — the two booking forms will drift the first time a price changes.
 
 ---
 
 ## Editing
 
-One file, plain HTML/CSS/JS, no framework. After changing the script block it
-is worth syntax-checking it:
+One file each, plain HTML/CSS/JS, no framework. After changing a script block:
 
 ```bash
 python3 -c "import re;open('/tmp/x.js','w').write(re.search(r'<script>(.*?)</script>',open('index.html').read(),re.S).group(1))"

@@ -1,18 +1,7 @@
-# OS
 .DS_Store
 Thumbs.db
 desktop.ini
-
-# Editors
 .vscode/
 .idea/
-*.swp
-
-# Node (only if tooling is ever added)
 node_modules/
-npm-debug.log*
-
-# Scratch
-/tmp/
 *.tmp
-extracted.js

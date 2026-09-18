@@ -58,14 +58,14 @@ opacity:0;transition:opacity .5s ease}
 /* marquee */
 .rail{overflow:hidden;border-bottom:1px solid var(--line);background:#000;
 padding:16px 0;position:relative}
-.rail::after{content:"";position:absolute;inset:0;pointer-events:none;
-background:linear-gradient(90deg,#000 0%,transparent 12%,transparent 88%,#000 100%)}
-.track{display:flex;gap:44px;width:max-content;animation:run 34s linear infinite}
-.track span{font-family:var(--quote);font-size:30px;line-height:1;white-space:nowrap;
-letter-spacing:.5px;background:var(--chrome);-webkit-background-clip:text;
-background-clip:text;color:transparent}
-@keyframes run{from{transform:translateX(0)}to{transform:translateX(-50%)}}
-@media(prefers-reduced-motion:reduce){.track{animation:none}}
+.track{display:flex;justify-content:center;align-items:center;padding:0 22px;
+min-height:34px;text-align:center}
+.track span{font-family:var(--quote);font-size:29px;line-height:1.05;letter-spacing:.5px;
+background:var(--chrome);-webkit-background-clip:text;background-clip:text;color:transparent;
+opacity:0;transition:opacity .55s ease}
+.track span.on{opacity:1}
+@media(max-width:430px){.track span{font-size:23px}}
+@media(prefers-reduced-motion:reduce){.track span{opacity:1;transition:none}}
 
 /* type */
 h1{font-family:var(--quote);font-size:52px;line-height:.98;margin:34px 0 14px;
@@ -79,15 +79,13 @@ color:var(--dim);margin:0 0 14px;display:flex;align-items:center;gap:10px}
 
 /* entry choice */
 .pick{display:grid;gap:14px;margin:6px 0 10px}
-.pickcard{display:flex;align-items:center;gap:18px;width:100%;text-align:left;
+.pickcard{display:flex;align-items:center;gap:14px;width:100%;text-align:left;
 background:linear-gradient(180deg,var(--panel-2),var(--panel));border:1px solid var(--line-2);
 border-radius:var(--r-lg);padding:24px 22px;cursor:pointer;font-family:inherit;
 color:var(--text);transition:border-color .16s,box-shadow .16s}
 .pickcard:hover{border-color:rgba(255,255,255,.3);box-shadow:0 0 34px rgba(255,255,255,.07)}
-.pickcard svg{flex:0 0 auto;width:46px;height:46px}
 .pickcard b{display:block;font-size:19px;font-weight:800;letter-spacing:-.2px}
 .pickcard span{display:block;font-size:13px;color:var(--muted);margin-top:3px}
-.pickcard i{margin-left:auto;font-style:normal;color:var(--dim);font-size:20px}
 .back{background:none;border:0;color:var(--muted);font-family:inherit;font-size:12.5px;
 font-weight:700;padding:10px 0;cursor:pointer;min-height:44px;
 text-decoration:underline;text-underline-offset:4px}
@@ -188,26 +186,14 @@ footer a{color:var(--muted)}
   <div id="chooser">
     <div class="pick">
       <button class="pickcard" type="button" data-sp="bad">
-        <svg viewBox="0 0 48 48" fill="none" aria-hidden="true">
-          <ellipse cx="19" cy="17" rx="12" ry="15" transform="rotate(-32 19 17)" stroke="currentColor" stroke-width="2.4"/>
-          <path d="M9 12 30 26M14 6 33 20M6 19l18 12" stroke="currentColor" stroke-width="1.1" opacity=".55"/>
-          <path d="M28 29l11 14" stroke="currentColor" stroke-width="3.4" stroke-linecap="round"/>
-        </svg>
         <span style="flex:1"><b>Badminton</b><span>Restringing, tension, grips</span></span>
-        <i>→</i>
       </button>
       <button class="pickcard" type="button" data-sp="cri">
-        <svg viewBox="0 0 48 48" fill="none" aria-hidden="true">
-          <rect x="16" y="18" width="17" height="25" rx="3" stroke="currentColor" stroke-width="2.4"/>
-          <path d="M24.5 21v19" stroke="currentColor" stroke-width="1.1" opacity=".55"/>
-          <rect x="21" y="4" width="7" height="14" rx="3" stroke="currentColor" stroke-width="2.4"/>
-        </svg>
         <span style="flex:1"><b>Cricket bat</b><span>Knocking-in, handles, repairs</span></span>
-        <i>→</i>
       </button>
     </div>
   </div>
-  <button class="back" id="back" type="button" hidden>← Change service</button>
+  <button class="back" id="back" type="button" hidden>Change service</button>
 
   <div id="flow" hidden>
   <p class="step">01 — You</p>
@@ -228,15 +214,43 @@ footer a{color:var(--muted)}
     <div class="chips" id="brands"></div>
     <label class="f" for="str">String <span class="hint">— price includes the string and the labour</span></label>
     <select class="inp" id="str"></select>
-    <label class="f" for="col">Colour</label>
-    <select class="inp" id="col"><option>Black</option></select>
+    <label class="f" for="col">Colour <span class="hint">— what's on the shelf today</span></label>
+    <select class="inp" id="col"></select>
   </div>
 
   <p class="step">03 — How you want it strung</p>
   <div class="card">
     <label class="f" for="ten">Tension — <span class="tval" id="tOut">24</span> lbs</label>
     <input type="range" id="ten" min="18" max="35" value="24">
-    <p class="hint" style="margin:0">22–26 club · 27–30 advanced · 31+ tournament</p>
+    <p class="hint" style="margin:0">18–22 beginner · 23–25 club · 26–28 advanced</p>
+    <button class="adv" id="guideBtn" type="button" aria-expanded="false">Not sure? Help me pick</button>
+    <div id="guideBlk" hidden>
+      <label class="f" for="gLvl">How long have you played</label>
+      <select class="inp" id="gLvl">
+        <option value="beg">Just started</option>
+        <option value="club" selected>Club level, play regularly</option>
+        <option value="adv">Competitive, play tournaments</option>
+      </select>
+      <label class="f" for="gFreq">How often</label>
+      <select class="inp" id="gFreq">
+        <option value="low">Once or twice a week</option>
+        <option value="mid" selected>Three or four times a week</option>
+        <option value="high">Almost every day</option>
+      </select>
+      <label class="f" for="gShut">Which shuttle do you play with</label>
+      <select class="inp" id="gShut">
+        <option value="ny" selected>Nylon / plastic</option>
+        <option value="fe">Feather</option>
+      </select>
+      <label class="f" for="gWant">What matters more</label>
+      <select class="inp" id="gWant">
+        <option value="ctrl">Control and durability</option>
+        <option value="bal" selected>A bit of both</option>
+        <option value="pow">Power and feel</option>
+      </select>
+      <div class="note" id="gOut" style="margin-top:16px"></div>
+      <button class="adv" id="gApply" type="button" style="text-decoration:none;color:var(--text)">Use this →</button>
+    </div>
     <button class="adv" id="advBtn" type="button" aria-expanded="false">Set mains and crosses separately</button>
     <div id="advBlk" hidden>
       <div class="r2" style="margin-top:14px">
@@ -259,6 +273,31 @@ footer a{color:var(--muted)}
       <span><b>Pre-stretch the string</b><span class="d">Holds tension longer.</span></span>
       <span class="p">+₹25</span>
     </label>
+
+    <details style="margin-top:20px">
+      <summary style="cursor:pointer;color:var(--muted);font-size:12.5px;min-height:44px;display:flex;align-items:center">Tension guide</summary>
+      <div class="hint" style="margin-top:10px;line-height:1.75">
+        <b style="color:var(--text)">By level</b><br>
+        Beginner, or coming back from joint pain — 18 to 22 lbs.<br>
+        Club player — 23 to 25 lbs. This suits most regular players in India.<br>
+        Advanced, clean overhead form — 26 to 28 lbs.<br><br>
+        <b style="color:var(--text)">The thing most people get wrong</b><br>
+        Tighter strings do not mean a harder smash. A looser bed stretches on impact and
+        flings the shuttle back — that is free power, and a bigger sweet spot with it.
+        A tight bed gives you none of that: every bit of pace has to come from your own
+        swing, and the shock travels straight into your wrist and elbow. Stringing too
+        tight is the most common cause of tennis elbow in club players.<br><br>
+        <b style="color:var(--text)">Shuttles</b><br>
+        Plastic shuttles are heavier — drop 1 to 2 lbs so the bed stays lively.
+        Feather shuttles take your standard tension.<br><br>
+        <b style="color:var(--text)">Also worth knowing</b><br>
+        Always check your frame's stated maximum before going high.<br>
+        Cold or dry halls make string brittle — drop a pound or two in winter.<br><br>
+        <b style="color:var(--text)">When to restring</b><br>
+        Once or twice a week — every 2 to 4 months. Daily play — monthly or sooner.
+        Restring when you see fraying or notching, or lose tension and power.
+      </div>
+    </details>
 
     <label class="f" for="nt">Anything we should know <span class="hint">— optional</span></label>
     <input class="inp" id="nt" placeholder="Frame maximum, broken grommet, anything else">
@@ -287,14 +326,23 @@ footer a{color:var(--muted)}
   </div>
   </div>
 
-  <p class="step">04 — When's your next game?</p>
+  <div id="batWhen" hidden>
+    <p class="step">04 — When it'll be ready</p>
+    <div class="card"><p class="hint" id="batWhenTxt" style="margin:0"></p></div>
+  </div>
+
+  <div id="badWhen">
+  <p class="step">04 — When needed</p>
   <div class="card">
     <div class="chips" id="when">
-      <label class="chip"><input type="radio" name="w" value="tonight" data-l="Tonight"><span>Tonight · +₹100</span></label>
-      <label class="chip"><input type="radio" name="w" value="tomorrow" data-l="Tomorrow" checked><span>Tomorrow</span></label>
-      <label class="chip"><input type="radio" name="w" value="weekend" data-l="This weekend"><span>This weekend</span></label>
-      <label class="chip"><input type="radio" name="w" value="norush" data-l="No rush"><span>No rush</span></label>
+      <label class="chip"><input type="radio" name="w" value="h1" data-l="Within 1 hour" data-x="100"><span>Within 1 hour · +₹100</span></label>
+      <label class="chip"><input type="radio" name="w" value="h3" data-l="Within 3 hours" data-x="50"><span>Within 3 hours · +₹50</span></label>
+      <label class="chip"><input type="radio" name="w" value="h5" data-l="Within 5 hours" data-x="0"><span>Within 5 hours</span></label>
+      <label class="chip"><input type="radio" name="w" value="nd" data-l="Next day" data-x="0" checked><span>Next day</span></label>
+      <label class="chip"><input type="radio" name="w" value="nr" data-l="No rush" data-x="0"><span>No rush</span></label>
     </div>
+    <p class="hint" id="lateNote" style="margin:12px 0 0" hidden>After 7pm the bench is usually finished for the day, so same-day options are closed. We'll confirm if we can still fit it in.</p>
+  </div>
   </div>
 
   <p class="step">05 — Payment</p>
@@ -302,6 +350,7 @@ footer a{color:var(--muted)}
     <div class="chips" id="pay">
       <label class="chip"><input type="radio" name="p" value="UPI" checked><span>UPI</span></label>
       <label class="chip"><input type="radio" name="p" value="Cash"><span>Cash</span></label>
+      <label class="chip"><input type="radio" name="p" value="Card"><span>Card</span></label>
     </div>
     <p class="hint" style="margin:12px 0 0">On collection.</p>
   </div>
@@ -310,7 +359,7 @@ footer a{color:var(--muted)}
     <div class="totrow" id="totrow" role="button" tabindex="0" aria-expanded="false">
       <span class="l">Total<br><span class="hint" style="letter-spacing:0">inclusive of tax</span></span>
       <span style="display:flex;align-items:center;gap:11px">
-        <span class="v" id="tot">₹550</span><span class="caret" id="caret">▾</span></span>
+        <span class="v" id="tot">₹550</span><span class="caret" id="caret">Details</span></span>
     </div>
     <div class="bd" id="bd"></div>
   </div>
@@ -335,23 +384,24 @@ footer a{color:var(--muted)}
 "use strict";
 var $=function(i){return document.getElementById(i)};
 var R=function(n){return "₹"+Number(n).toLocaleString("en-IN")};
-var WA="918056436668", KNOT4=25, PRE=25, RUSH=100;
+var WA="918056436668", KNOT4=25, PRE=25;
+function rushOpt(){ return document.querySelector('input[name=w]:checked'); }
+function rushFee(){ return Number(rushOpt().dataset.x||0); }
+function rushLabel(){ return rushOpt().dataset.l; }
 
 var STR={
- "Yonex":[["BG65",550],["BG65 Titanium",650],["BG66 Ultimax",750],["Nanogy 95",750],
-          ["BG80 Power",850],["BG80",950],["Exbolt 63",1100],["Exbolt 65",1100],
-          ["Exbolt 68",1100],["Aero Sonic",1200],["Aero Bite Boost",1200]],
- "Victor":[["VBS 70",600],["VBS 66 Nano",750],["VBS 68 Power",850]],
- "Li-Ning":[["No.7",600],["No.1",650]],
- "Cosmio":[["BG 68",500]]
+ "Yonex":[["BG65",550,["Turquoise","Lavender","Violet","Royal Blue","Amber"]],["BG65 Titanium",650,["Black","Red","Blue","White"]],["BG66 Ultimax",750,["Metallic White","Blue","Pearl Navy","Black"]],["Nanogy 95",750,["Cosmic Gold","Blue Green","Silver Gray","Rouge Pink"]],["Exbolt 65",1100,["Yellow","Turquoise","Blue","Purple","Light Pink","Mint"]],["Aero Sonic",1200,["White"]],["Aero Bite Boost",1200,["Gray/Yellow","Gray/Red","White/Green","White/Blue"]]],
+ "Victor":[["VBS 70",600,["Patina Green","Cool Blue","Flame Red","Heat Orange"]],["VBS 68 Power",850,["Pink","Yellow","White","Blue"]]],
+ "Li-Ning":[["No.7",600,["Pink","Blue","Black","Gold"]],["No.1",650,["Champagne Gold","Purple"]]],
+ "Cozmio":[["BG 68 Hitmax",500,["Blue","Pink","Yellow","Purple"]]]
 };
 var BAT=[
- ["knockH","Knocking-in, by hand","Mallet work at the bench.",500],
- ["knockM","Knocking-in, by machine","Faster and more even.",800],
- ["oil","Oiling","Raw linseed, face and edges.",100],
- ["toe","Toe guard","Stops water damage at the base.",100],
- ["scuff","Anti-scuff sheet","Protects the face.",150],
- ["fibre","Fibre tape","Edge and shoulder reinforcement.",150]];
+ ["knockH","Knocking-in, by hand","Mallet work at the bench.",500,1],
+ ["knockM","Knocking-in, by machine","Faster and more even.",800,1],
+ ["oil","Oiling","Raw linseed, face and edges.",100,0],
+ ["toe","Toe guard","Stops water damage at the base.",100,0],
+ ["scuff","Anti-scuff sheet","Protects the face.",150,0],
+ ["fibre","Fibre tape","Edge and shoulder reinforcement.",150,0]];
 var QUOTED=[["weight","Weight reducing","Priced on grams removed."],
  ["crack","Crack binding","We look, then quote."]];
 var QC=["A new bat is not ready. It is raw.",
@@ -369,8 +419,32 @@ var QUOTES=["Strings don't warn you. They just go.",
  "You'll know on the first serve.",
  "Say i can. We'll make sure the racket can too."];
 
-function rail(list){ $("track").innerHTML=(list.concat(list)).map(function(q){
-  return '<span>'+q+'</span>'}).join(""); }
+var qTimer=null;
+function rail(list){
+  if(qTimer){ clearInterval(qTimer); qTimer=null; }
+  var t=$("track"), i=0;
+  t.innerHTML='<span class="on"></span>';
+  var el=t.firstChild;
+  el.textContent=list[0];
+  if(window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  qTimer=setInterval(function(){
+    el.classList.remove("on");
+    setTimeout(function(){
+      i=(i+1)%list.length; el.textContent=list[i]; el.classList.add("on");
+    }, 560);
+  }, 4200);
+}
+(function lateHours(){
+  var hr=new Date().getHours();
+  if(hr<19) return;
+  $("lateNote").hidden=false;
+  ["h1","h3","h5"].forEach(function(v){
+    var el=document.querySelector('input[name=w][value="'+v+'"]');
+    if(el){ el.disabled=true; el.parentNode.style.opacity=".4"; }
+  });
+  var nd=document.querySelector('input[name=w][value="nd"]'); if(nd) nd.checked=true;
+})();
+
 rail(QUOTES);
 
 (function headerVideo(){
@@ -384,7 +458,7 @@ rail(QUOTES);
 })();
 
 $("batList").innerHTML = BAT.map(function(b){
-  return '<label class="opt"><input type="checkbox" class="bo" value="'+b[0]+'" data-nm="'+b[1]+'" data-pr="'+b[3]+'">'
+  return '<label class="opt"><input type="checkbox" class="bo" value="'+b[0]+'" data-nm="'+b[1]+'" data-pr="'+b[3]+'" data-long="'+b[4]+'">'
    +'<span><b>'+b[1]+'</b><span class="d">'+b[2]+'</span></span>'
    +'<span class="p">'+R(b[3])+'</span></label>'; }).join("")
  + QUOTED.map(function(q){
@@ -398,7 +472,7 @@ function choose(s){
   SPORT=s;
   $("chooser").hidden=true; $("flow").hidden=false; $("back").hidden=false;
   $("rail").hidden=true;
-  $("back").textContent = "← " + (s==="cri"?"Cricket bat":"Badminton") + " · change";
+  $("back").textContent = (s==="cri"?"Cricket bat":"Badminton") + " · change";
   render();
   window.scrollTo({top:0,behavior:"instant"});
 }
@@ -419,7 +493,12 @@ $("brands").innerHTML=Object.keys(STR).map(function(b,i){
     +'><span>'+b+'</span></label>'}).join("");
 function fillStrings(){
   $("str").innerHTML=STR[brand].map(function(s,i){
-    return '<option value="'+i+'">'+s[0]+' — '+R(s[1])+'</option>'}).join("");
+    return '<option value="'+i+'">'+brand+' '+s[0]+' — '+R(s[1])+'</option>'}).join("");
+  fillColours();
+}
+function fillColours(){
+  var s=STR[brand][$("str").selectedIndex]||STR[brand][0];
+  $("col").innerHTML=s[2].map(function(c){ return '<option>'+c+'</option>'}).join("");
 }
 fillStrings();
 
@@ -432,8 +511,6 @@ function lines(){
     if(hv) o.push(["New handle — "+$("hnd").selectedOptions[0].text.split(" — ")[0], hv]);
     Array.prototype.forEach.call(document.querySelectorAll(".bq:checked"),function(c){
       o.push([c.dataset.nm, null]); });
-    if(document.querySelector('input[name=w]:checked').value==="tonight")
-      o.push(["Ready tonight — priority",RUSH]);
     return o;
   }
   var s=STR[brand][$("str").selectedIndex]||STR[brand][0];
@@ -442,8 +519,7 @@ function lines(){
   var out=[[brand+" "+s[0]+" at "+t, s[1]]];
   if(document.querySelector('input[name=k]:checked').value==="4") out.push(["4-knot stringing",KNOT4]);
   if($("pre").checked) out.push(["Pre-stretch",PRE]);
-  if(document.querySelector('input[name=w]:checked').value==="tonight")
-    out.push(["Ready tonight — priority",RUSH]);
+  var rf=rushFee(); if(rf) out.push([rushLabel()+" — priority",rf]);
   return out;
 }
 function render(){
@@ -451,6 +527,19 @@ function render(){
   var cri=sport()==="cri";
   document.body.dataset.sport = cri ? "cricket" : "badminton";
   $("badBlk").hidden=cri; $("criBlk").hidden=!cri;
+  $("badWhen").hidden=cri; $("batWhen").hidden=!cri;
+  if(cri){
+    var slow=false, any=false;
+    Array.prototype.forEach.call(document.querySelectorAll(".bo:checked"),function(c){
+      any=true; if(c.dataset.long==="1") slow=true; });
+    if(document.querySelectorAll(".bq:checked").length){ any=true; slow=true; }
+    if(Number($("hnd").value)){ any=true; slow=true; }
+    $("batWhenTxt").innerHTML = !any
+      ? "Pick what the bat needs and we'll tell you how it works."
+      : (slow
+        ? "We look at the bat first, then tell you when it will be ready. Knocking-in, weight reducing, a new handle and crack work all take proper time \u2014 bat work is done early in the morning, before the shop opens, so it is never same-day."
+        : "This can be done on the spot. Bring the bat in and wait, or leave it and collect the same day.");
+  }
   $("h1").innerHTML = cri ? "Bat care<br>by Sportline" : "Stringing<br>by Sportline";
   var ls=lines(), t=0, h="";
   ls.forEach(function(l){
@@ -461,7 +550,7 @@ function render(){
 }
 function toggle(){
   var on=$("bd").classList.toggle("on");
-  $("caret").textContent=on?"▴":"▾";
+  $("caret").textContent=on?"Hide":"Details";
   $("totrow").setAttribute("aria-expanded",on);
 }
 $("totrow").onclick=toggle;
@@ -478,11 +567,68 @@ $("ten").oninput=function(){ $("tOut").textContent=this.value;
   $("tc").value=Math.min(35,+this.value+2); $("tcOut").textContent=$("tc").value; render(); };
 $("tm").oninput=function(){ $("tmOut").textContent=this.value; render(); };
 $("tc").oninput=function(){ $("tcOut").textContent=this.value; render(); };
-$("str").onchange=render;
+$("str").onchange=function(){ fillColours(); render(); };
 document.addEventListener("change",function(e){
   if(e.target.name==="b"){ brand=e.target.value; fillStrings(); }
   render();
 });
+
+$("guideBtn").onclick=function(){
+  var b=$("guideBlk"); b.hidden=!b.hidden;
+  this.setAttribute("aria-expanded",!b.hidden);
+  this.textContent=b.hidden?"Not sure? Help me pick":"Close";
+  if(!b.hidden) advise();
+};
+["gLvl","gFreq","gWant"].forEach(function(id){ $(id).onchange=advise; });
+
+var PICK={beg:20, club:24, adv:27};
+var SUGG={
+  beg:{b:"Yonex",s:"BG65",why:"thick and durable, big sweet spot while your swing settles"},
+  club_ctrl:{b:"Yonex",s:"Nanogy 95",why:"soft feel, holds a line well"},
+  club_bal:{b:"Yonex",s:"BG65 Titanium",why:"a balanced all-rounder for regular club play"},
+  club_pow:{b:"Yonex",s:"BG66 Ultimax",why:"quick repulsion, and the lower tension does the rest"},
+  adv_ctrl:{b:"Yonex",s:"Aero Bite Boost",why:"hybrid, built for bite and placement"},
+  adv_bal:{b:"Yonex",s:"Exbolt 65",why:"thin and sharp, high repulsion"},
+  adv_pow:{b:"Yonex",s:"Aero Sonic",why:"thin gauge, fast off the face"}
+};
+var gRec=null;
+function advise(){
+  var lv=$("gLvl").value, fq=$("gFreq").value, wt=$("gWant").value, sh=$("gShut").value;
+  var t=PICK[lv], notes=[];
+  // high tension = control, low tension = power. Not the other way round.
+  if(wt==="ctrl"){ t+=1; }
+  if(wt==="pow"){ t-=1; notes.push("Lower tension gives you the free power, not higher."); }
+  if(fq==="high" && lv!=="beg") t+=1;
+  if(fq==="low"  && lv==="adv") t-=1;
+  if(sh==="ny"){ t-=1; notes.push("Plastic shuttles are heavier, so we drop a pound to keep the bed lively."); }
+  var floor={beg:18,club:22,adv:25}[lv], ceil={beg:23,club:26,adv:29}[lv];
+  t=Math.max(floor,Math.min(ceil,t));
+  var key = lv==="beg" ? "beg" : lv+"_"+wt;
+  var s=SUGG[key]||SUGG.club_bal;
+  gRec={t:t, b:s.b, s:s.s};
+  if(lv!=="adv" && t>=26) notes.push("Anything tighter than this needs a genuinely fast swing, or it costs you power and your elbow.");
+  $("gOut").innerHTML='<b style="color:var(--text)">'+t+' lbs · '+s.b+' '+s.s+'</b><br>'
+    + s.why.charAt(0).toUpperCase()+s.why.slice(1)+'.'
+    + (notes.length?'<br><span style="opacity:.85">'+notes.join(" ")+'</span>':'')
+    + '<br><span style="opacity:.7">Check your frame\u2019s stated maximum before going higher.</span>';
+}
+["gShut"].forEach(function(id){ $(id).onchange=advise; });
+$("gApply").onclick=function(){
+  if(!gRec) advise();
+  if(!STR[gRec.b] || !STR[gRec.b].some(function(x){return x[0]===gRec.s})){
+    gRec.b="Yonex"; gRec.s="BG65";
+  }
+  var bEl=document.querySelector('input[name=b][value="'+gRec.b+'"]');
+  if(bEl && !bEl.checked){ bEl.checked=true; brand=gRec.b; fillStrings(); }
+  Array.prototype.forEach.call($("str").options,function(o,i){
+    if(o.text.indexOf(gRec.s)===0) $("str").selectedIndex=i; });
+  $("ten").value=gRec.t; $("tOut").textContent=gRec.t;
+  $("tm").value=gRec.t; $("tmOut").textContent=gRec.t;
+  $("tc").value=Math.min(35,gRec.t+2); $("tcOut").textContent=$("tc").value;
+  $("guideBlk").hidden=true; $("guideBtn").textContent="Not sure? Help me pick";
+  $("guideBtn").setAttribute("aria-expanded",false);
+  render();
+};
 
 $("go").onclick=function(){
   if($("hp").value) return;
@@ -495,21 +641,49 @@ $("go").onclick=function(){
   if(p.length){ e.textContent="Still need "+p.join(" and ")+"."; e.style.display="block"; return; }
   e.style.display="none";
   var cri=sport()==="cri";
-  var ls=lines(), t=0, L=[cri?"*Bat care by Sportline*":"*Stringing by Sportline*",""];
-  L.push("Name: "+$("nm").value.trim());
-  L.push("Mobile: "+ph,"");
-  ls.forEach(function(l){
-    if(l[1]===null){ L.push("• "+l[0]+" (quoted after inspection)"); }
-    else { t+=l[1]; L.push("• "+l[0]+" — "+R(l[1])); } });
-  L.push("Total: "+R(t)+" (inclusive of tax)","");
-  L.push("Next game: "+document.querySelector('input[name=w]:checked').dataset.l);
-  L.push("Paying by: "+document.querySelector('input[name=p]:checked').value);
-  if(!cri){ L.push("Colour: "+$("col").value);
-    if($("nt").value.trim()) L.push("Note: "+$("nt").value.trim()); }
-  else if($("bnt").value.trim()) L.push("Note: "+$("bnt").value.trim());
+  var ls=lines(), t=0, rows=[];
+  ls.forEach(function(l){ if(l[1]!==null) t+=l[1]; });
+
+  function row(k,v){ rows.push([k,v]); }
+  if(cri){
+    ls.forEach(function(l){ row(l[0], l[1]===null ? "on inspection" : R(l[1])); });
+  } else {
+    var s=STR[brand][$("str").selectedIndex]||STR[brand][0];
+    row("String", brand+" "+s[0]);
+    row("Colour", $("col").value);
+    row("Tension", !$("advBlk").hidden
+        ? $("tm").value+" / "+$("tc").value+" lbs"
+        : $("ten").value+" lbs");
+    row("Knots", document.querySelector('input[name=k]:checked').value);
+    if($("pre").checked) row("Pre-stretch", "yes");
+    if(rushFee()) row("Priority", R(rushFee()));
+  }
+  row("Total", R(t)+" incl. tax");
+
+  var w=0; rows.forEach(function(r){ if(r[0].length>w) w=r[0].length; });
+  var block=rows.map(function(r){
+    return r[0] + new Array(w-r[0].length+3).join(" ") + r[1];
+  }).join("\n");
+
+  var L=[];
+  L.push(cri ? "*Bat care by Sportline*" : "*Stringing by Sportline*");
+  L.push("");
+  L.push("```");
+  L.push(block);
+  L.push("```");
+  L.push($("nm").value.trim()+"  \u00b7  "+ph);
+  var tail=[];
+  if(!cri) tail.push(rushLabel().toLowerCase());
+  tail.push("paying by "+document.querySelector('input[name=p]:checked').value);
+  L.push(tail.join("  \u00b7  "));
+  var note = cri ? $("bnt").value.trim() : $("nt").value.trim();
+  if(note) L.push("", "Note: "+note);
   var src=new URLSearchParams(location.search).get("src");
   if(src) L.push("Ref: "+src.slice(0,24));
-  L.push("", cri?"Can you confirm the price and when it will be ready?":"Is that string in stock?");
+  L.push("");
+  L.push(cri
+    ? "Can you have a look and tell me what it'll cost and when it'll be ready?"
+    : "Is that string in stock?");
   window.open("https://wa.me/"+WA+"?text="+encodeURIComponent(L.join("\n")),"_blank","noopener");
 };
 

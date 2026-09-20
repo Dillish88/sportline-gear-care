@@ -1,19 +1,24 @@
-(() => {
+(async () => {
   'use strict';
   const $ = id => document.getElementById(id);
   const money = n => '₹' + Number(n).toLocaleString('en-IN');
-  const catalogue = window.SPORTLINE_CATALOGUE;
+  $('next').disabled = true;
+  let entries;
+  try { entries = await PilotAPI.rpc('pilot_public_catalogue'); }
+  catch (e) { $('setup-note').hidden=false; $('setup-note').textContent='The service list could not load. Refresh to retry or ask the counter team. '+e.message; return; }
+  const catalogue = Object.create(null);
+  entries.filter(e=>e.sport==='badminton').forEach(e=>{const [brand,...model]=e.key.split('|');(catalogue[brand] ||= []).push([model.join('|'),e.price,e.colours]);});
+  if(!Object.keys(catalogue).length){$('setup-note').hidden=false;$('setup-note').textContent='No strings are available for booking. Please ask the counter team.';return;}
+  const handles=entries.filter(e=>e.sport==='cricket'&&e.key.startsWith('handle-'));
+  $('handle').replaceChildren(new Option('No replacement needed','0'),...handles.map(e=>{const o=new Option(e.name.replace('New handle: ','')+' — '+money(e.price),e.price);o.dataset.key=e.key;return o;}));
+  $('next').disabled = false;
   const params = new URLSearchParams(location.search);
   const source = (params.get('src') || '').replace(/[\u0000-\u001f\u007f]/g, ' ').trim().slice(0, 100);
   const sportParam = (params.get('sport') || params.get('svc') || '').toLowerCase();
   let sport = ['cri', 'cricket', 'bat'].includes(sportParam) ? 'cricket' : 'badminton';
   let step = 0;
   let reached = 0;
-  const batJobs = [
-    ['hand', 'Knocking-in by hand', 500], ['machine', 'Knocking-in by machine', 800],
-    ['oil', 'Oiling', 100], ['toe', 'Toe guard', 100], ['scuff', 'Anti-scuff sheet', 150],
-    ['fibre', 'Fibre tape', 150], ['weight', 'Weight reducing', null], ['crack', 'Crack binding', null]
-  ];
+  const batJobs = entries.filter(e=>e.sport==='cricket'&&!e.key.startsWith('handle-')).map(e=>[e.key,e.name,e.price]);
   const shops = {
     '6th': '6th Avenue — 2, R-Block, 6th Ave West, Anna Nagar',
     '5th': '5th Avenue — 265, 5th Ave, Z Block, Anna Nagar'
@@ -186,9 +191,9 @@
     for (let i = 0; i < 2; i++) { const problem = validStage(i); if (problem) { showStep(i); showError(problem); return; } }
     if (!window.PILOT_CONFIG.enabled) { showError(['Bookings are not open yet. Please ask the counter team.', $('next')]); return; }
     const jobs = selectedBatJobs().map(j => j[0]);
-    if (Number($('handle').value)) jobs.push('handle-' + $('handle').value);
+    if (Number($('handle').value)) jobs.push($('handle').selectedOptions[0].dataset.key);
     const payload = { sport, name: $('name').value.trim(), phone: normalizedPhone(), shop: shop(),
-      gear: $('gear').value.trim(), note: $('notes').value.trim(), src: source, payment: $('payment').value,
+      marketing_opt_in: $('marketing').checked, gear: $('gear').value.trim(), note: $('notes').value.trim(), src: source, payment: $('payment').value,
       ...(sport === 'badminton' ? { string_key: $('brand').value + '|' + currentString()[0], colour: $('colour').value,
         mains: Number($('separate').checked ? $('mains').value : $('tension').value),
         crosses: Number($('separate').checked ? $('crosses').value : $('tension').value),

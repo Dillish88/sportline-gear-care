@@ -1,0 +1,34 @@
+{
+  "redirects": [
+    {
+      "source": "/",
+      "destination": "/pilot/",
+      "permanent": true
+    },
+    {
+      "source": "/index.html",
+      "destination": "/pilot/",
+      "permanent": true
+    },
+    {
+      "source": "/concept",
+      "destination": "/pilot/",
+      "permanent": true
+    },
+    {
+      "source": "/concept/:path*",
+      "destination": "/pilot/",
+      "permanent": true
+    },
+    {
+      "source": "/gear-care.html",
+      "destination": "/pilot/",
+      "permanent": true
+    },
+    {
+      "source": "/stringing.html",
+      "destination": "/pilot/",
+      "permanent": true
+    }
+  ]
+}

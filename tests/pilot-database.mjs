@@ -16,6 +16,8 @@ try{
  // Migration and catalogue are safe to re-run.
  await db.exec(fs.readFileSync(path.resolve('db/pilot.sql'),'utf8'));
  await db.exec(fs.readFileSync(path.resolve('db/pilot-catalogue.sql'),'utf8'));
+ await db.exec(fs.readFileSync('db/pilot-maintenance.sql','utf8'));
+ await db.exec(fs.readFileSync('db/pilot-maintenance.sql','utf8'));
  const staff='00000000-0000-4000-8000-000000000001';
  await db.query('insert into auth.users values($1)',[staff]);
  await db.query('insert into public.pilot_staff(user_id) values($1)',[staff]);
@@ -57,5 +59,34 @@ try{
  const audit=(await db.query('select * from public.pilot_events where order_id=$1',[o.id])).rows;
  assert.equal(audit.length,6);assert(audit.filter(e=>e.action!=='Requested').every(e=>e.actor===staff));
  assert.equal((await db.query('select count(*)::integer as n from public.pilot_orders')).rows[0].n,2);
+ // Catalogue updates must reach the public form without a deployment, excluding unpriced strings.
+ await db.exec('set role anon');
+ const catalogue=(await db.query('select public.pilot_public_catalogue() as c')).rows[0].c;
+ assert.equal(catalogue.find(c=>c.key==='Yonex|Exbolt 68').price,1100);
+ assert(!catalogue.some(c=>c.key==='Li-Ning|AP64 Rainbow'));
+ await assert.rejects(db.query('select public.pilot_purge_personal_data()'),/permission denied/);
+ await assert.rejects(db.query('select * from public.pilot_marketing_contacts'),/permission denied/);
+ await assert.rejects(db.query('select public.pilot_marketing_consent($1,true)',[o.id]),/permission denied/);
+ await db.exec('reset role');
+ await db.query("update public.pilot_orders set request_data=request_data||'{\"marketing_opt_in\":true}'::jsonb where id=$1",[o.id]);
+ await db.exec('set role authenticated');
+ await db.query('select public.pilot_marketing_consent($1,true)',[o.id]);
+ await db.exec('reset role');
+ assert.equal((await db.query('select count(*)::integer n from public.pilot_marketing_contacts')).rows[0].n,1);
+ await db.exec('set role authenticated');
+ await db.query('select public.pilot_withdraw_offers($1)',[req.phone]);
+ await assert.rejects(db.query('select public.pilot_marketing_consent($1,true)',[o.id]),/has not requested/);
+ await db.exec('reset role');
+ assert.equal((await db.query('select count(*)::integer n from public.pilot_marketing_contacts')).rows[0].n,0);
+ // Old completed jobs lose every copy of contact details; old open jobs stay intact.
+ await db.query("update public.pilot_orders set completed_at=now()-interval '13 months' where id=$1",[o.id]);
+ await db.query("update public.pilot_orders set created_at=now()-interval '13 months' where code=$1",[bat.code]);
+ assert.equal((await db.query('select public.pilot_purge_personal_data() n')).rows[0].n,1);
+ const purged=(await db.query('select * from public.pilot_orders where id=$1',[o.id])).rows[0];
+ assert.equal(purged.phone,'');assert.equal(purged.gear,'');assert.equal(purged.note,'');assert.equal(purged.src,'');assert.deepEqual(purged.request_data,{});assert(purged.anonymised_at);assert.equal(purged.final_total,600);
+ assert.notEqual(purged.receipt_token,receipt.token);
+ assert.equal((await db.query('select phone from public.pilot_orders where code=$1',[bat.code])).rows[0].phone,'9876543211');
+ assert.equal((await db.query('select public.pilot_purge_personal_data() n')).rows[0].n,0);
+ console.log('PASS: live catalogue, withheld prices, staff-only consent/withdrawal, public denial, 12-month anonymisation, old open-job preservation and repeat purge.');
  console.log('PASS: SQL migration/re-run, server prices, idempotent retries, input validation, private tracking, anonymous/non-staff denial, approved staff queue, price confirmation, payment-before-collection, transition conflicts and audit actor.');
 }finally{await db.close();}

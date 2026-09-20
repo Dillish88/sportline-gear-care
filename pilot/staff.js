@@ -57,12 +57,27 @@
       card.append(node('p',o.lines.map(l=>l.name+' · '+(l.price===null?'Quote required':money(l.price))).join('\n')));
       if(o.sport==='badminton')card.append(node('p',`${r.colour} · ${r.mains}/${r.crosses} lbs · ${r.knots} knots\nNeeded: ${r.needed}${r.advice?'\nAdvice requested: confirm setup with customer.':''}`));
       if(o.gear)card.append(node('p','Gear: '+o.gear));if(o.note)card.append(node('p','Note: '+o.note));if(o.src)card.append(node('p','QR source: '+o.src));
-      card.append(node('p','Estimate: '+money(o.estimate)+(o.needs_quote?' + quote':'')+'\nAgreed: '+(o.final_total===null?'Not confirmed':money(o.final_total))+'\nPayment: '+(o.paid?'Paid':'Unpaid')+' · '+r.payment));
+      card.append(node('p','Estimate: '+money(o.estimate)+(o.needs_quote?' + quote':'')+'\nAgreed: '+(o.final_total===null?'Not confirmed':money(o.final_total))+'\nPayment: '+(o.paid?'Paid':'Unpaid')+' · '+r.payment+'\nService prices include tax.'));
       let amount;
       if(o.status==='Requested'){
         const label=node('label','Final price agreed with customer (₹)');amount=node('input');amount.type='number';amount.min='0';amount.max='100000';amount.step='1';amount.value=o.needs_quote?'':o.estimate;label.append(amount);card.append(label,node('p','Accept only after checking stock, gear condition, frame limits and timing.','field-help'));
       }
       const actions=node('div',undefined,'actions');
+      const message=['Hi '+o.customer_name+',','Sportline Gear Care — '+o.code,'Status: '+o.status,
+        ...o.lines.map(l=>l.name+' — '+(l.price===null?'Quote after inspection':money(l.price)+' (tax inclusive)')),
+        o.gear?'Gear: '+o.gear:'',o.sport==='badminton'?r.colour+' · '+r.mains+'/'+r.crosses+' lbs · '+r.knots+' knots'+(r.pre_stretch?' · Pre-stretch':''):'',
+        'Estimated total: '+money(o.estimate)+(o.needs_quote?' + inspection quote':''),
+        'Agreed total: '+(o.final_total===null?'Awaiting counter confirmation':money(o.final_total)+' (tax inclusive)'),
+        'Payment: '+(o.paid?'Received':'Not yet received')+' · '+r.payment,
+        'Drop / collect: '+(o.shop==='6th'?'2, R-Block, 6th Ave West, Anna Nagar':'265, 5th Ave, Z Block, Anna Nagar'),
+        'Hours: 10am–9pm · Shop: +91 80564 36668',
+        o.status==='Ready'?'Your gear is ready. Bring your job number when collecting.':o.status==='Collected'?'Thank you for choosing Sportline.':o.status==='Cancelled'?'This request has been cancelled.':'The shop will confirm stock, final price and collection time. Priority is subject to confirmation.'
+      ].filter(Boolean).join('\n');
+      const preview=node('details');preview.append(node('summary','Review WhatsApp message'),node('p',message));card.append(preview);
+      const wa=node('a','Open WhatsApp to send','secondary');wa.href='https://wa.me/91'+o.phone+'?text='+encodeURIComponent(message);wa.target='_blank';wa.rel='noopener noreferrer';actions.append(wa);
+      card.append(node('p','Review the message and tap Send in WhatsApp. Opening WhatsApp does not send it.','field-help'));
+      if(r.marketing_opt_in){const consent=node('button','Confirm offers opt-in at counter','secondary');consent.onclick=async()=>{if(!confirm('Has this customer confirmed they want Sportline offers on this number for 12 months?'))return;try{await PilotAPI.rpc('pilot_marketing_consent',{p_order:o.id,p_opt_in:true},await accessToken());consent.textContent='Offer opt-in saved';}catch(e){error(e);}};actions.append(consent);}
+      const stop=node('button','Stop offers for this number','secondary');stop.onclick=async()=>{try{await PilotAPI.rpc('pilot_marketing_consent',{p_order:o.id,p_opt_in:false},await accessToken());stop.textContent='Offers stopped';}catch(e){error(e);}};actions.append(stop);
       function button(label,action){const b=node('button',label,'primary');b.onclick=()=>act(o,action,amount?.value===''?NaN:Number(amount?.value),b);actions.append(b);}
       if(o.status==='Requested')button('Accept job','accept');
       if(o.status==='Accepted')button('Start work','start');
@@ -73,6 +88,7 @@
       const p=node('button','Print job slip','secondary');p.onclick=()=>print(o);actions.append(p);card.append(actions);$('queue').append(card);
     });
   }
+  $('withdraw-offers').onclick=async()=>{try{await PilotAPI.rpc('pilot_withdraw_offers',{p_phone:$('withdraw-phone').value.trim()},await accessToken());$('withdraw-phone').value='';$('withdraw-result').textContent='Offers stopped for that number.';await load();}catch(e){error(e);}};
   $('reload').onclick=load;['search','shop-filter','status-filter'].forEach(id=>$(id).addEventListener(id==='search'?'input':'change',render));
   setInterval(()=>{if(!document.hidden&&!['INPUT','SELECT','TEXTAREA'].includes(document.activeElement?.tagName))load();},15000);
 })();

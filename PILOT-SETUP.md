@@ -1,8 +1,24 @@
+# Current maintenance update
+
+The sole customer application is `/pilot/`. Retired routes redirect on Vercel. Apply `db/pilot-maintenance.sql` before deploying this update, followed by `db/pilot-retention-schedule.sql`. The latter schedules anonymisation daily at 03:00 India time. Inspect cron.job and cron.job_run_details to verify execution.
+
+Personal repair details (including the original request JSON) are removed 12 months after collection/cancellation; numeric job totals and statuses remain. Private tracker tokens are rotated. Active jobs are retained for staff review. Database backups and staff WhatsApp copies have separate retention; this job only covers live database records.
+
+Offer requests are optional and unchecked by default. Staff must confirm the customer at the counter before saving consent. Marketing contacts expire after 12 months; the staff screen can withdraw permission by mobile number even when the job is no longer in the queue. Do not import existing bookings as marketing opt-ins.
+
+Staff can review the WhatsApp note and open WhatsApp to send it. No message is automatic and no delivery status is recorded.
+
+Exbolt 68 is seeded at the supplied SPEC price of ₹1,100. Eleven missing strings are inactive pending prices. After approval, set price, colours and active in pilot_catalogue; the form reads this live.
+
+Set `qrOrigin` in pilot/config.js only after ownership, renewal and DNS/HTTPS have been verified for the chosen permanent address. Until then QR printing is disabled.
+
+---
+
 # Counter self-booking pilot
 
-The original pages and `/concept/` remain available. The new working surface is
-`/pilot/`; booking is intentionally disabled in `pilot/config.js` until setup is
-verified. Never paste a localhost QR in the shop.
+The sole customer booking surface is `/pilot/`. Booking is enabled after the
+completed live pilot test. For a new installation, disable booking until its
+setup is verified. Never paste a localhost QR in the shop.
 
 ## Activation
 
@@ -15,7 +31,7 @@ the accounts that already own those projects.
    `db/pilot-catalogue.sql`. These create separate pilot tables and RPC functions.
    Existing rows are preserved. The migration revokes the older schema's broad
    anon/authenticated privileges and its code-only public tracking function.
-   The existing standalone WhatsApp pages do not use those database tables.
+   The retired standalone WhatsApp pages have been removed.
 2. Create or identify the staff member's Supabase Auth user. The user enters
    their own password. Do not put a password or service-role key in these files.
 3. After the owner approves that staff identity, run (replace the UUID):
@@ -73,8 +89,7 @@ the accounts that already own those projects.
 - There are phone-based request limits (2/minute, 10/day), but no phone ownership
   verification. Staff must check the customer physically. Broader public promotion
   should add gateway/IP abuse controls and a stronger phone verification flow.
-- Decide the retention period with the shop before collecting real customer data;
-  this version does not automatically purge records or promise a retention period.
+- Retention is implemented by the maintenance migration and scheduled job described above.
 
 ## Validation
 

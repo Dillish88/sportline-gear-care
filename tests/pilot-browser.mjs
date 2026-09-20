@@ -5,7 +5,7 @@ const {PGlite}=await import(pathToFileURL(process.env.PILOT_PGLITE));const db=ne
 const root=process.cwd();const uid='00000000-0000-4000-8000-000000000001';
 await db.exec(`create role anon;create role authenticated;create schema auth;create table auth.users(id uuid primary key);
 create function auth.uid() returns uuid language sql stable as $$select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$;grant usage on schema public to anon,authenticated;`);
-await db.exec(fs.readFileSync('db/pilot.sql','utf8'));await db.exec(fs.readFileSync('db/pilot-catalogue.sql','utf8'));
+await db.exec(fs.readFileSync('db/pilot.sql','utf8'));await db.exec(fs.readFileSync('db/pilot-catalogue.sql','utf8'));await db.exec(fs.readFileSync('db/pilot-maintenance.sql','utf8'));
 await db.query('insert into auth.users values($1)',[uid]);await db.query('insert into public.pilot_staff(user_id) values($1)',[uid]);
 let serial=Promise.resolve(),loseFirstResponse=true;
 const server=http.createServer(async(req,res)=>{
@@ -20,7 +20,7 @@ const server=http.createServer(async(req,res)=>{
     return json(400,{error_code:'invalid_credentials'});
    }
    if(url.pathname==='/auth/v1/logout')return json(200,{});
-   const fn=url.pathname.split('/').pop();const args={pilot_create_booking:['p_request','p_key'],pilot_track_booking:['p_token'],pilot_queue:[],pilot_update_order:['p_id','p_expected','p_action','p_amount']}[fn];
+   const fn=url.pathname.split('/').pop();const args={pilot_create_booking:['p_request','p_key'],pilot_track_booking:['p_token'],pilot_public_catalogue:[],pilot_marketing_consent:['p_order','p_opt_in'],pilot_withdraw_offers:['p_phone'],pilot_queue:[],pilot_update_order:['p_id','p_expected','p_action','p_amount']}[fn];
    if(!args)return json(404,{});
    const execute=async()=>{
     await db.exec('reset role');await db.query("select set_config('request.jwt.claim.sub',$1,false)",[req.headers.authorization==='Bearer test-staff'?uid:'']);
@@ -37,7 +37,7 @@ const server=http.createServer(async(req,res)=>{
    }catch(e){return json(400,{code:e.code,message:e.message});}
   }
   let file=path.resolve(root,'.'+decodeURIComponent(url.pathname));
-  if(!file.startsWith(root+path.sep))return json(403,{});
+  if(file!==root&&!file.startsWith(root+path.sep))return json(403,{});
   if(fs.existsSync(file)&&fs.statSync(file).isDirectory())file=path.join(file,'index.html');
   if(!fs.existsSync(file))return json(404,{});
   res.setHeader('Content-Type',({'.html':'text/html','.js':'text/javascript','.css':'text/css','.webp':'image/webp'}[path.extname(file)]||'application/octet-stream'));
@@ -49,7 +49,8 @@ const browser=await chromium.launch({headless:true,channel:'msedge'});
 try{
  const customer=await browser.newPage({viewport:{width:390,height:844}});const staff=await browser.newPage();const errors=[];
  for(const page of [customer,staff])page.on('pageerror',e=>errors.push(e.message));
- await customer.goto(base+'/pilot/?shop=5th&src=counter-5th');
+ await customer.goto(base+'/?shop=5th&src=counter-5th#booking');
+ await customer.waitForURL('**/pilot/?shop=5th&src=counter-5th#booking');
  await customer.locator('#next').click();await customer.locator('#name').fill('Pilot Test Customer');await customer.locator('#phone').fill('9876543210');
  await customer.locator('#next').click();await customer.locator('#next').click();
  await customer.locator('#error').waitFor({state:'visible'});
@@ -61,6 +62,10 @@ try{
  await staff.goto(base+'/pilot/staff.html');await staff.locator('#email').fill('staff@example.test');await staff.locator('#password').fill('test-password');await staff.locator('#signin').click();
  await staff.locator('.job-card').waitFor();assert.equal(await staff.locator('.job-card').count(),1);
  assert.match(await staff.locator('.job-card').innerText(),/5th Avenue/);
+ const whatsapp=new URL(await staff.getByRole('link',{name:'Open WhatsApp to send'}).getAttribute('href'));
+ assert.equal(whatsapp.hostname,'wa.me');assert.equal(whatsapp.pathname,'/919876543210');
+ assert.match(whatsapp.searchParams.get('text'),new RegExp(code));assert.match(whatsapp.searchParams.get('text'),/tax inclusive/);
+ assert.match(whatsapp.searchParams.get('text'),/Awaiting counter confirmation/);
  await staff.locator('.job-card input[type=number]').fill('550');await staff.getByRole('button',{name:'Accept job',exact:true}).click();
  await staff.getByRole('button',{name:'Start work',exact:true}).click();await staff.getByRole('button',{name:'Mark ready',exact:true}).click();
  await staff.getByRole('button',{name:'Record payment',exact:true}).waitFor();

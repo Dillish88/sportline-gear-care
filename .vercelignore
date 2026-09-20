@@ -4,3 +4,9 @@ support.js
 github.md
 uploads/
 SPEC.md
+db/
+tests/
+tools/
+**/README.md
+LOCAL-TEST.md
+PILOT-SETUP.md

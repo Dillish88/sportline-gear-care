@@ -182,6 +182,9 @@ footer a{color:var(--muted)}
 
 <div class="wrap">
   <h1 id="h1">Gear care<br>by Sportline</h1>
+  <p class="hint">Choose your service, check the estimate, then send your request on WhatsApp. Bring your gear to our 6th Avenue shop; staff confirm price, stock and timing.</p>
+  <p class="note" id="sourceNote" hidden></p>
+  <noscript>Please enable JavaScript to use this form, or call Sportline on +91 80564 36668.</noscript>
 
   <div id="chooser">
     <div class="pick">
@@ -205,6 +208,8 @@ footer a{color:var(--muted)}
         <input class="inp" id="ph" type="tel" inputmode="numeric" autocomplete="tel-national" placeholder="98xxxxxxxx"></div>
     </div>
     <div class="hp"><input id="hp" tabindex="-1" autocomplete="off" aria-hidden="true"></div>
+    <label class="f" for="gear">Your gear <span class="hint">— brand / model, optional</span></label>
+    <input class="inp" id="gear" maxlength="120" placeholder="e.g. Yonex Astrox 88D or an SS cricket bat">
   </div>
 
   <div id="badBlk">
@@ -357,18 +362,20 @@ footer a{color:var(--muted)}
 
   <div class="tot">
     <div class="totrow" id="totrow" role="button" tabindex="0" aria-expanded="false">
-      <span class="l">Total<br><span class="hint" style="letter-spacing:0">inclusive of tax</span></span>
+      <span class="l">Estimate<br><span class="hint" style="letter-spacing:0">inclusive of tax · inspection work extra</span></span>
       <span style="display:flex;align-items:center;gap:11px">
         <span class="v" id="tot">₹550</span><span class="caret" id="caret">Details</span></span>
     </div>
     <div class="bd" id="bd"></div>
   </div>
 
-  <p class="err" id="err"></p>
+  <p class="err" id="err" role="alert"></p>
+  <p class="hint">WhatsApp opens with your request filled in. Press Send there to share your details with Sportline. Your job is confirmed only when the shop replies.</p>
   <button class="go" id="go">
     <svg width="19" height="19" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm5.3 14.1c-.2.6-1.3 1.2-1.8 1.2-.5.1-1 .1-1.7-.1-.4-.1-.9-.3-1.5-.6-2.7-1.2-4.4-3.9-4.5-4.1-.2-.2-1.1-1.4-1.1-2.7s.7-1.9.9-2.2c.2-.2.5-.3.7-.3h.5c.2 0 .4 0 .6.5l.8 2c.1.1.1.3 0 .5l-.3.5-.4.4c-.1.1-.3.3-.1.6.2.3.8 1.3 1.7 2.1 1.1 1 2.1 1.3 2.4 1.4.2.1.4.1.6-.1l.8-1c.2-.2.3-.2.6-.1l2 .9c.3.1.4.2.5.3.1.2.1.7-.1 1.3z"/></svg>
-    Send on WhatsApp
+    Request repair on WhatsApp
   </button>
+  <p class="hint" id="handoff" role="status" hidden>Finish by pressing Send in WhatsApp. No order has been saved on this website.</p>
 
   </div>
 
@@ -385,6 +392,9 @@ footer a{color:var(--muted)}
 var $=function(i){return document.getElementById(i)};
 var R=function(n){return "₹"+Number(n).toLocaleString("en-IN")};
 var WA="918056436668", KNOT4=25, PRE=25;
+var params=new URLSearchParams(location.search);
+var source=(params.get("src")||"").replace(/[\u0000-\u001f\u007f]/g," ").trim().slice(0,100);
+if(source){ $("sourceNote").textContent="Referred by: "+source; $("sourceNote").hidden=false; }
 function rushOpt(){ return document.querySelector('input[name=w]:checked'); }
 function rushFee(){ return Number(rushOpt().dataset.x||0); }
 function rushLabel(){ return rushOpt().dataset.l; }
@@ -435,7 +445,7 @@ function rail(list){
   }, 4200);
 }
 (function lateHours(){
-  var hr=new Date().getHours();
+  var hr=Number(new Intl.DateTimeFormat("en-GB",{timeZone:"Asia/Kolkata",hour:"2-digit",hourCycle:"h23"}).format(new Date()));
   if(hr<19) return;
   $("lateNote").hidden=false;
   ["h1","h3","h5"].forEach(function(v){
@@ -620,8 +630,8 @@ $("gApply").onclick=function(){
   }
   var bEl=document.querySelector('input[name=b][value="'+gRec.b+'"]');
   if(bEl && !bEl.checked){ bEl.checked=true; brand=gRec.b; fillStrings(); }
-  Array.prototype.forEach.call($("str").options,function(o,i){
-    if(o.text.indexOf(gRec.s)===0) $("str").selectedIndex=i; });
+  $("str").selectedIndex=STR[brand].findIndex(function(s){ return s[0]===gRec.s; });
+  fillColours();
   $("ten").value=gRec.t; $("tOut").textContent=gRec.t;
   $("tm").value=gRec.t; $("tmOut").textContent=gRec.t;
   $("tc").value=Math.min(35,gRec.t+2); $("tcOut").textContent=$("tc").value;
@@ -633,6 +643,7 @@ $("gApply").onclick=function(){
 $("go").onclick=function(){
   if($("hp").value) return;
   var p=[], ph=$("ph").value.replace(/\D/g,"");
+  if(ph.length===12 && ph.slice(0,2)==="91") ph=ph.slice(2);
   if(!$("nm").value.trim()) p.push("your name");
   if(!/^[6-9]\d{9}$/.test(ph)) p.push("a valid mobile number");
   if(sport()==="cri" && !lines().filter(function(l){return l[0].indexOf("priority")<0}).length)
@@ -658,7 +669,7 @@ $("go").onclick=function(){
     if($("pre").checked) row("Pre-stretch", "yes");
     if(rushFee()) row("Priority", R(rushFee()));
   }
-  row("Total", R(t)+" incl. tax");
+  row("Estimate", R(t)+" incl. tax"+(ls.some(function(l){return l[1]===null;})?" + inspection quote":""));
 
   var w=0; rows.forEach(function(r){ if(r[0].length>w) w=r[0].length; });
   var block=rows.map(function(r){
@@ -672,24 +683,26 @@ $("go").onclick=function(){
   L.push(block);
   L.push("```");
   L.push($("nm").value.trim()+"  \u00b7  "+ph);
+  if($("gear").value.trim()) L.push("Gear: "+$("gear").value.trim());
+  L.push("Drop-off: Sportline, 6th Avenue");
   var tail=[];
   if(!cri) tail.push(rushLabel().toLowerCase());
   tail.push("paying by "+document.querySelector('input[name=p]:checked').value);
   L.push(tail.join("  \u00b7  "));
   var note = cri ? $("bnt").value.trim() : $("nt").value.trim();
   if(note) L.push("", "Note: "+note);
-  var src=new URLSearchParams(location.search).get("src");
-  if(src) L.push("Ref: "+src.slice(0,24));
+  if(source) L.push("Ref: "+source);
   L.push("");
   L.push(cri
     ? "Can you have a look and tell me what it'll cost and when it'll be ready?"
-    : "Is that string in stock?");
+    : "Please confirm string stock, the price and when I should drop off my racket.");
+  $("handoff").hidden=false;
   window.open("https://wa.me/"+WA+"?text="+encodeURIComponent(L.join("\n")),"_blank","noopener");
 };
 
 (function(){
-  var q=(new URLSearchParams(location.search).get("sport")||"").toLowerCase();
-  if(q==="bad"||q==="badminton") choose("bad");
+  var q=(params.get("sport")||params.get("svc")||"").toLowerCase();
+  if(q==="bad"||q==="badminton"||q==="string") choose("bad");
   else if(q==="cri"||q==="cricket"||q==="bat") choose("cri");
 })();
 })();

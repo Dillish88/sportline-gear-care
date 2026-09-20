@@ -566,9 +566,8 @@ var WHEN = {
 var LEG = {"Anna Nagar":40, "Kilpauk":60, "Other nearby":90};
 
 var BAT = [
-  {id:"knock-hand", nm:"Knocking-in, by hand",   ds:"Six to eight hours of mallet work. The thorough option.", pr:650},
-  {id:"knock-mach", nm:"Knocking-in, by machine",ds:"Faster and more even. Best for English willow.",          pr:850},
-  {id:"weight",     nm:"Weight reducing",        ds:"Shaved down and re-balanced.",                            pr:250},
+  {id:"knock-hand", nm:"Knocking-in, by hand",   ds:"Six to eight hours of mallet work. The thorough option.", pr:500},
+  {id:"knock-mach", nm:"Knocking-in, by machine",ds:"Faster and more even. Best for English willow.",          pr:800},
   {id:"oiling",     nm:"Oiling",                 ds:"Raw linseed on the face and edges.",                      pr:100},
   {id:"toe",        nm:"Toe guard",              ds:"Stops water damage at the base.",                         pr:100},
   {id:"scuff",      nm:"Anti-scuff sheet",       ds:"Protects the face from surface cracks.",                  pr:150},
@@ -711,7 +710,7 @@ $("tension").addEventListener("input", function(){
   this.setAttribute("aria-valuetext", this.value + " pounds");
   render();
 });
-["strSel","gripChk","crackChk","shop","loc"].forEach(function(id){
+["strSel","gripChk","weightChk","crackChk","shop","loc","slot"].forEach(function(id){
   $(id).addEventListener("change", render);
 });
 document.addEventListener("change", function(e){

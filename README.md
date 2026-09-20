@@ -1,5 +1,24 @@
 # Sportline — Gear Care
 
+## Current pages
+
+- [`concept/`](concept/): redesigned customer page with real racket photography and WhatsApp requests.
+- [`pilot/`](pilot/): saved-booking customer flow, gated until Supabase activation.
+- [`pilot/staff.html`](pilot/staff.html): approved staff sign-in and counter queue.
+- [`pilot/print-qr.html`](pilot/print-qr.html): shop QR posters, printable after activation on the public HTTPS site.
+- [`PILOT-SETUP.md`](PILOT-SETUP.md): database activation and daily counter workflow.
+
+Uploading these static files does not apply the SQL migrations. The pilot remains
+disabled until database security, staff access and a live booking test are verified.
+The original customer page remains at `index.html`.
+
+> Current setup: `index.html` is the canonical QR landing page. See
+> [LOCAL-TEST.md](LOCAL-TEST.md) for the current QR parameters, local preview,
+> supported workflow and next steps. `test-links.html` has three sample journeys.
+> The historical notes below describe earlier versions and are not the current
+> contract: the main page supports `svc`/`sport` and `src`, with counter drop at
+> 6th Avenue. It does not offer rider pickup or save orders to a database.
+
 Badminton restringing and cricket bat care, booked online. Anna Nagar, Chennai.
 
 A customer scans a QR code or opens the link, fills a short form, and taps one

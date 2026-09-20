@@ -1,0 +1,15 @@
+<!doctype html>
+<html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Sportline — local QR flow tests</title>
+<style>body{max-width:700px;margin:60px auto;padding:20px;background:#08090b;color:#f2f4f7;font:17px/1.7 system-ui}a{color:#ff7176}li{margin:20px 0}code{overflow-wrap:anywhere}</style>
+<h1>Test the QR journey</h1>
+<p>These links simulate scanning posters at different locations. The location is carried into the WhatsApp request.</p>
+<ul>
+<li><a href="/?src=academy-demo&svc=string">Academy · badminton restringing</a></li>
+<li><a href="/?src=play-area-demo">Play area · choose a service</a></li>
+<li><a href="/?src=shop-demo&svc=bat">Shop · cricket bat repair</a></li>
+</ul>
+<p>This is a local test. Printed QR codes must use the final public HTTPS domain, never localhost. Replace each demo source with a unique location label.</p>
+<p>Example: <code>https://YOUR-DOMAIN/?src=academy-name&svc=string</code></p>
+<p>Requests are sent through WhatsApp. There is no website order database yet. Use test details and do not press Send during testing.</p>
+</html>

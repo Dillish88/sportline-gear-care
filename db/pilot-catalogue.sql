@@ -1,0 +1,27 @@
+-- Prices from the supplied catalogue. Re-running does not overwrite shop edits.
+insert into public.pilot_catalogue(key,sport,name,price,colours) values
+('Yonex|BG65','badminton','Yonex BG65',550,'["Turquoise", "Lavender", "Violet", "Royal Blue", "Amber"]'::jsonb),
+('Yonex|BG65 Titanium','badminton','Yonex BG65 Titanium',650,'["Black", "Red", "Blue", "White"]'::jsonb),
+('Yonex|BG66 Ultimax','badminton','Yonex BG66 Ultimax',750,'["Metallic White", "Blue", "Pearl Navy", "Black"]'::jsonb),
+('Yonex|Nanogy 95','badminton','Yonex Nanogy 95',750,'["Cosmic Gold", "Blue Green", "Silver Gray", "Rouge Pink"]'::jsonb),
+('Yonex|Exbolt 65','badminton','Yonex Exbolt 65',1100,'["Yellow", "Turquoise", "Blue", "Purple", "Light Pink", "Mint"]'::jsonb),
+('Yonex|Aero Sonic','badminton','Yonex Aero Sonic',1200,'["White"]'::jsonb),
+('Yonex|Aero Bite Boost','badminton','Yonex Aero Bite Boost',1200,'["Gray/Yellow", "Gray/Red", "White/Green", "White/Blue"]'::jsonb),
+('Victor|VBS 70','badminton','Victor VBS 70',600,'["Patina Green", "Cool Blue", "Flame Red", "Heat Orange"]'::jsonb),
+('Victor|VBS 68 Power','badminton','Victor VBS 68 Power',850,'["Pink", "Yellow", "White", "Blue"]'::jsonb),
+('Li-Ning|No.7','badminton','Li-Ning No.7',600,'["Pink", "Blue", "Black", "Gold"]'::jsonb),
+('Li-Ning|No.1','badminton','Li-Ning No.1',650,'["Champagne Gold", "Purple"]'::jsonb),
+('Cozmio|BG 68 Hitmax','badminton','Cozmio BG 68 Hitmax',500,'["Blue", "Pink", "Yellow", "Purple"]'::jsonb),
+('hand','cricket','Knocking-in by hand',500,'[]'::jsonb),
+('machine','cricket','Knocking-in by machine',800,'[]'::jsonb),
+('oil','cricket','Oiling',100,'[]'::jsonb),
+('toe','cricket','Toe guard',100,'[]'::jsonb),
+('scuff','cricket','Anti-scuff sheet',150,'[]'::jsonb),
+('fibre','cricket','Fibre tape',150,'[]'::jsonb),
+('weight','cricket','Weight reducing',null,'[]'::jsonb),
+('crack','cricket','Crack binding',null,'[]'::jsonb),
+('handle-750','cricket','New handle: Cane',750,'[]'::jsonb),
+('handle-850','cricket','New handle: 6 piece',850,'[]'::jsonb),
+('handle-950','cricket','New handle: 9 piece',950,'[]'::jsonb),
+('handle-1200','cricket','New handle: Singapore cane',1200,'[]'::jsonb)
+on conflict(key) do nothing;

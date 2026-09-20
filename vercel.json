@@ -29,6 +29,11 @@
       "source": "/stringing.html",
       "destination": "/pilot/",
       "permanent": true
+    },
+    {
+      "source": "/concept/",
+      "destination": "/pilot/",
+      "permanent": true
     }
   ]
 }

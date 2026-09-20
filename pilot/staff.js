@@ -29,7 +29,7 @@
   }
   function print(o){
     const box=$('print-label');const r=o.request_data;
-    const text=[o.sport==='badminton'?'Badminton restringing':'Cricket bat care',...o.lines.map(l=>l.name),o.sport==='badminton'?`${r.colour} · ${r.mains}/${r.crosses} lbs · ${r.knots} knots`:'',o.gear,'Customer: '+o.customer_name,'Mobile: '+o.phone,'Drop / collect: '+o.shop+' Avenue','Status: '+o.status,'Agreed total: '+(o.final_total===null?'To confirm':money(o.final_total)),'Note: '+(o.note||'—'),'Check the job number and customer mobile before handover.'].filter(Boolean).join('\n');
+    const text=[o.sport==='badminton'?'Badminton restringing':'Cricket bat care',...o.lines.map(l=>l.name),o.sport==='badminton'?`${r.colour} · ${r.mains}/${r.crosses} lbs · ${r.knots} knots`:'',o.gear,'Customer: '+o.customer_name,'Mobile: '+o.phone,'Drop / collect: '+o.shop+' Avenue','Status: '+o.status,'Agreed total (tax inclusive): '+(o.final_total===null?'To confirm':money(o.final_total)),'Note: '+(o.note||'—'),'Check the job number and customer mobile before handover.'].filter(Boolean).join('\n');
     box.replaceChildren(node('h2','Sportline · job slip'),node('h1',o.code),node('p',text));window.print();
   }
   async function act(o,action,amount,button){
@@ -66,6 +66,8 @@
       const message=['Hi '+o.customer_name+',','Sportline Gear Care — '+o.code,'Status: '+o.status,
         ...o.lines.map(l=>l.name+' — '+(l.price===null?'Quote after inspection':money(l.price)+' (tax inclusive)')),
         o.gear?'Gear: '+o.gear:'',o.sport==='badminton'?r.colour+' · '+r.mains+'/'+r.crosses+' lbs · '+r.knots+' knots'+(r.pre_stretch?' · Pre-stretch':''):'',
+        o.sport==='badminton'?'Requested timing: '+r.needed+' (subject to shop confirmation)':'Bat work: completion time confirmed after inspection',
+        r.advice?'Please confirm the string setup with our team.':'',
         'Estimated total: '+money(o.estimate)+(o.needs_quote?' + inspection quote':''),
         'Agreed total: '+(o.final_total===null?'Awaiting counter confirmation':money(o.final_total)+' (tax inclusive)'),
         'Payment: '+(o.paid?'Received':'Not yet received')+' · '+r.payment,
@@ -90,5 +92,5 @@
   }
   $('withdraw-offers').onclick=async()=>{try{await PilotAPI.rpc('pilot_withdraw_offers',{p_phone:$('withdraw-phone').value.trim()},await accessToken());$('withdraw-phone').value='';$('withdraw-result').textContent='Offers stopped for that number.';await load();}catch(e){error(e);}};
   $('reload').onclick=load;['search','shop-filter','status-filter'].forEach(id=>$(id).addEventListener(id==='search'?'input':'change',render));
-  setInterval(()=>{if(!document.hidden&&!['INPUT','SELECT','TEXTAREA'].includes(document.activeElement?.tagName))load();},15000);
+  setInterval(()=>{if(!document.hidden&&!document.querySelector('.job-card details[open]')&&!['INPUT','SELECT','TEXTAREA'].includes(document.activeElement?.tagName))load();},15000);
 })();

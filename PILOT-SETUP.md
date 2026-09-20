@@ -1,5 +1,14 @@
 # Current maintenance update
 
+Production maintenance was applied on 20 September 2026. The four legacy tables
+and their two functions were removed after verifying empty job/event/stock tables
+and the default bench configuration, with the owner's confirmation. The guarded
+removal is recorded in `db/retire-legacy.sql`; do not rerun it on a retired schema.
+Supabase remains on Free as requested. Leaked-password protection is unavailable
+on that plan and remains off. The repository is private; Vercel deployment was verified.
+`book.sportlinestores.com` has no DNS record as of that date; the registry expiry
+is 2 November 2026. Account ownership/renewal still require the domain holder.
+
 The sole customer application is `/pilot/`. Retired routes redirect on Vercel. Apply `db/pilot-maintenance.sql` before deploying this update, followed by `db/pilot-retention-schedule.sql`. The latter schedules anonymisation daily at 03:00 India time. Inspect cron.job and cron.job_run_details to verify execution.
 
 Personal repair details (including the original request JSON) are removed 12 months after collection/cancellation; numeric job totals and statuses remain. Private tracker tokens are rotated. Active jobs are retained for staff review. Database backups and staff WhatsApp copies have separate retention; this job only covers live database records.

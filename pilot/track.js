@@ -9,6 +9,10 @@
       const o=await PilotAPI.rpc('pilot_track_booking',{p_token:token});
       if(!o) throw new Error('We could not find this job. Check your private link or ask the counter team.');
       $('title').textContent='Your request is saved.'; $('message').textContent='Keep this page or take a screenshot of your job number.';
+      const stages=['Requested','Accepted','At the bench','Ready','Collected'];
+      const labels=['Received','Accepted','Repairing','Ready','Collected'];
+      $('progress').hidden=o.status==='Cancelled';
+      $('progress').replaceChildren(...stages.map((s,i)=>{const li=document.createElement('li');li.textContent=labels[i];if(i<stages.indexOf(o.status))li.className='complete';if(s===o.status){li.className='current';li.setAttribute('aria-current','step');}return li;}));
       $('code').textContent=o.code; $('instruction').textContent=help[o.status]; $('job').hidden=false;
       const rows=[['Status',o.status],['Drop & collect',o.shop==='5th'?'5th Avenue':'6th Avenue'],['Estimate','₹'+o.estimate.toLocaleString('en-IN')+(o.needs_quote?' + inspection quote':'')],['Agreed price',o.final_total===null?'Awaiting counter confirmation':'₹'+o.final_total.toLocaleString('en-IN')],['Payment',o.paid?'Recorded as paid':'Not yet recorded']];
       $('details').replaceChildren(...rows.map(([k,v])=>{const row=document.createElement('div');row.className='review-row';const dt=document.createElement('dt'),dd=document.createElement('dd');dt.textContent=k;dd.textContent=v;row.append(dt,dd);return row;}));

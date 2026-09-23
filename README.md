@@ -4,6 +4,13 @@ The only customer booking page is **/pilot/**. It saves requests in Supabase.
 The homepage, /concept/, /gear-care.html and /stringing.html redirect to it on Vercel.
 The retired implementations are available in Git history.
 
+The pilot uses the supplied V2 typography (Bebas Neue headings and Manrope text),
+touch-friendly brand/colour choices and a mobile estimate/action bar. Staff use
+New, In progress and Ready views with one primary next action per job. Full repair
+details, WhatsApp messages and other controls expand on demand; customer notes
+and racket setup remain visible. The tracker includes a visual progress indicator.
+This design refresh does not add slot promises, advances or change booking APIs.
+
 - Customer: https://sportline-gear-care.vercel.app/pilot/
 - Staff: /pilot/staff.html
 - QR posters: /pilot/print-qr.html (printing awaits confirmed permanent domain)

@@ -27,6 +27,16 @@
   if (params.get('shop') === '5th') document.querySelector('input[name=shop][value="5th"]').checked = true;
   function fillSelect(id, options) {
     $(id).replaceChildren(...options.map(([value, text]) => new Option(text, value)));
+    if (id === 'brand' || id === 'colour') {
+      const group = $(id + '-chips');
+      group.replaceChildren(...options.map(([value,text],i) => {
+        const label = document.createElement('label'); label.className = 'choice-chip';
+        const radio = document.createElement('input'); radio.type='radio'; radio.name=id+'-choice'; radio.value=value; radio.checked=i===0;
+        const span = document.createElement('span'); span.textContent=text;
+        radio.addEventListener('change',()=>{ if(radio.checked){$(id).value=value;$(id).dispatchEvent(new Event('change',{bubbles:true}));} });
+        label.append(radio,span);return label;
+      }));
+    }
   }
   fillSelect('brand', Object.keys(catalogue).map(b => [b, b]));
   function currentString() { return catalogue[$('brand').value][Number($('string').value)]; }
@@ -81,6 +91,7 @@
     const total = rows.reduce((sum, r) => sum + (r[1] || 0), 0);
     $('total').textContent = quoted && !total ? 'To quote' : money(total) + (quoted ? ' + quote' : '');
     $('total').style.fontSize = quoted ? '23px' : '';
+    $('mobile-total').textContent = $('total').textContent;
     $('estimate-note').textContent = quoted ? 'Priced work includes tax. Inspection work is quoted separately.'
       : sport === 'badminton' ? 'Includes string, labour and tax.' : rows.length ? 'Service prices include tax.' : 'Choose a service to see your estimate.';
     $('bench-copy').textContent = sport === 'badminton'
@@ -223,5 +234,6 @@
     $('timing-help').textContent = 'It’s after 7pm in Chennai. Same-day requests are closed; we’ll confirm the next available bench time.';
   }
   renderSport(); showStep(0, false);
+  new IntersectionObserver(entries=>document.body.classList.toggle('booking-visible',entries[0].isIntersecting)).observe($('booking'));
   if (!window.PILOT_CONFIG.enabled) { $('setup-note').hidden=false; $('setup-note').textContent='Pilot setup is in progress. You can try the form; saving opens after the shop setup is complete.'; }
 })();

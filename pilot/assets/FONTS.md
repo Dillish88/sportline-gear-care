@@ -1,0 +1,1 @@
+Typography imported from the customer-supplied sportline-book-v2/book/index.html: Manrope (regular, bold, extra bold) and the supplied QBebas heading face. Font bytes are unchanged and served locally.

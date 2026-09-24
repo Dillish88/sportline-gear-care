@@ -1,0 +1,19 @@
+import fs from 'node:fs';import assert from 'node:assert/strict';import {pathToFileURL} from 'node:url';import {randomUUID} from 'node:crypto';
+const {PGlite}=await import(pathToFileURL(process.env.PILOT_PGLITE));const db=new PGlite();
+try{
+await db.exec(`create role anon;create role authenticated;create schema auth;create table auth.users(id uuid primary key);create function auth.uid() returns uuid language sql stable as $$select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$;grant usage on schema public to anon,authenticated;`);
+for(const f of ['pilot.sql','pilot-catalogue.sql','pilot-maintenance.sql','pilot-booking-v3.sql','pilot-booking-v3.sql'])await db.exec(fs.readFileSync('db/'+f,'utf8'));
+const uid=randomUUID();await db.query('insert into auth.users values($1)',[uid]);await db.query('insert into pilot_staff(user_id) values($1)',[uid]);
+
+await db.exec(fs.readFileSync('db/pilot-loyalty-baseline.sql','utf8'));await db.exec(fs.readFileSync('db/pilot-loyalty-hardening.sql','utf8'));await db.exec(fs.readFileSync('db/pilot-loyalty-hardening.sql','utf8'));
+const call=async(fn,args=[]) =>(await db.query(`select public.${fn}(${args.map((_,i)=>'$'+(i+1)).join(',')}) as r`,args)).rows[0].r;
+const req={name:'Wallet Test',phone:'9876543210',sport:'cricket',shop:'6th',gear:'Test bat',jobs:['hand'],payment:'Cash',marketing_opt_in:true};
+await db.exec('set role anon');const receipt=await call('pilot_create_booking_v2',[req,randomUUID()]);await assert.rejects(call('pilot_loyalty_for_token',[receipt.token]),/permission denied/);await assert.rejects(call('pilot_loyalty_welcome',[req.phone]),/permission denied/);
+await db.exec('reset role;set role authenticated');await assert.rejects(call('pilot_loyalty_for_token',[receipt.token]),/Staff access/);await db.query("select set_config('request.jwt.claim.sub',$1,false)",[uid]);
+let o=(await call('pilot_queue_v2'))[0];assert.equal(o.status_token,receipt.token);await assert.rejects(call('pilot_loyalty_welcome',[req.phone]),/opt-in/);await call('pilot_marketing_consent',[o.id,true]);assert.equal((await call('pilot_loyalty_welcome',[req.phone])).awarded,true);assert.equal((await call('pilot_loyalty_welcome',[req.phone])).awarded,false);
+await call('pilot_update_order',[o.id,'Requested','accept',1000]);await call('pilot_record_payment_v3',[o.id,1000,'Cash','balance',randomUUID()]);await call('pilot_update_order',[o.id,'Accepted','start',null]);await call('pilot_update_order',[o.id,'At the bench','ready',null]);await call('pilot_update_order',[o.id,'Ready','collect',null]);assert.equal(await call('pilot_loyalty_for_token',[receipt.token]),70);
+await db.exec('reset role');await db.query("update pilot_orders set status='Collected' where id=$1",[o.id]);await db.exec('set role authenticated');assert.equal(await call('pilot_loyalty_for_token',[receipt.token]),70);
+await db.exec('reset role;set role anon');const second=await call('pilot_create_booking_v2',[req,randomUUID()]);await assert.rejects(call('pilot_loyalty_for_token',[second.token]),/permission denied/);
+await db.exec('reset role;set role authenticated');o=(await call('pilot_queue_v2')).find(x=>x.code===second.code);await call('pilot_update_order',[o.id,'Requested','accept',1000]);const key=randomUUID();const args=[o.id,30,'part',key];await call('pilot_loyalty_redeem_v2',args);await call('pilot_loyalty_redeem_v2',args);assert.equal(await call('pilot_loyalty_for_token',[receipt.token]),40);await assert.rejects(call('pilot_loyalty_redeem_v2',[o.id,41,'part',randomUUID()]),/Not enough credit/);await assert.rejects(call('pilot_record_payment_v3',[o.id,30,'Cash','part',key]),/changed/);assert.equal((await call('pilot_queue_v2')).find(x=>x.id===o.id).paid_total,30);
+console.log('PASS: loyalty 5% earned once, staff-confirmed welcome once, redemption retries, overspend and mixed-payment key guards, status links and public wallet privacy.');
+}finally{await db.close();}

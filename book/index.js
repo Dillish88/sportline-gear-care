@@ -20,13 +20,14 @@ function rpc(fn,body){
     return j;});});
 }
 
+var assistantApplied=false;
 var SPORT=null, CAT=[], BRANDS={}, CRI=[], brand=null;
 var T={mains:24,crosses:26};
 var SLOTDAYS=[], dayIdx=0, slotSel=null, urgentFee=100;
 var pending=null;try{pending=JSON.parse(sessionStorage.getItem("sportline-book-pending"))}catch(e){}
 
 /* ---------------- navigation ---------------- */
-function show(id){["landing","flow","done"].forEach(function(x){$(x).hidden=(x!==id)});window.scrollTo(0,0)}
+function show(id){document.body.dataset.screen=id;["landing","flow","done"].forEach(function(x){$(x).hidden=(x!==id)});window.scrollTo(0,0)}
 var LEDE={
   badminton:"Tell us your setup and choose when you want it ready. Drop it off at least 30 minutes before.",
   cricket:"Choose the work. Bat work is done early morning, so we confirm the ready date after a look.",
@@ -142,9 +143,52 @@ function loadDays(){
     $("urgentSub").textContent="Earliest available slot today. Existing ready-by promises are protected. Included in the 20 daily bookings.";
     dayIdx=0;
     for(var i=0;i<SLOTDAYS.length;i++){ if(freeCount(SLOTDAYS[i])>0){dayIdx=i;break;} }
-    drawDays(); drawSlots(); render();
+    drawDays(); drawSlots(); drawSimple(); render();
   });
 }
+
+/* ---------------- simple ready-by picker ----------------
+   A handful of big choices instead of ~20 exact times. Each finds the earliest
+   free slot in its window from the days already loaded — no extra API calls —
+   and books that exact slot, same as picking it from the full grid would. */
+var WINDOWS=[
+  {id:"next",  label:"Next available", sub:function(s){return s?dayLabel(s.day.date,0).split(" · ")[0]+" · "+fmtTime(s.slot.ready||s.slot.end):"Nothing free"}, pick:function(){return firstFreeAnyDay()}},
+  {id:"morn",  label:"This morning",   from:"11:00", to:"13:00"},
+  {id:"aft",   label:"This afternoon", from:"13:00", to:"17:00"},
+  {id:"eve",   label:"This evening",   from:"17:00", to:"21:01"},
+  {id:"tom",   label:"Tomorrow",       day:1}
+];
+function firstFreeAnyDay(){
+  for(var i=0;i<SLOTDAYS.length;i++){ var s=firstFreeInDay(i); if(s) return {day:SLOTDAYS[i],slot:s,idx:i}; }
+  return null;
+}
+function firstFreeInDay(idx,from,to){
+  var d=SLOTDAYS[idx]; if(!d) return null;
+  for(var i=0;i<d.slots.length;i++){
+    var s=d.slots[i]; if(!s.free) continue;
+    var ready=s.ready||s.end; if(from&&ready<from) continue; if(to&&ready>=to) continue;
+    return s;
+  }
+  return null;
+}
+function windowChoice(w){
+  if(w.pick) return w.pick();
+  var wanted=addDays(istToday(),w.day||0), idx=SLOTDAYS.findIndex(d=>d.date===wanted);if(idx<0)return null;
+  var s=firstFreeInDay(idx,w.from,w.to);return s?{day:SLOTDAYS[idx],slot:s,idx:idx}:null;
+}
+function drawSimple(){
+  var box=$("simple"); if(!box) return;
+  var selId=null;
+  if(slotSel){ WINDOWS.forEach(function(w){ if(selId) return; var c=windowChoice(w); if(c&&c.day.date===slotSel.date&&c.slot.start===slotSel.start) selId=w.id; }); }
+  box.innerHTML=WINDOWS.map(function(w){
+    var c=windowChoice(w), off=!c;
+    var sub=w.sub?w.sub(c):(c?dayLabel(c.day.date,c.idx).split(" · ")[0]+" · "+fmtTime(c.slot.ready||c.slot.end):"Closed today");
+    return '<label class="chip"><input type="radio" name="simple" value="'+w.id+'"'+(w.id===selId?" checked":"")+(off?" disabled":"")+'>'
+      +'<span>'+w.label+(off?"":" · "+sub)+'</span></label>';
+  }).join("");
+}
+$("exactToggle").onclick=function(){ $("simpleBlk").hidden=true; $("exactBlk").hidden=false; };
+$("simpleToggle").onclick=function(){ $("exactBlk").hidden=true; $("simpleBlk").hidden=false; };
 function freeCount(d){return d.slots.filter(function(s){return s.free}).length}
 function drawDays(){
   $("days").innerHTML=SLOTDAYS.map(function(d,i){
@@ -211,9 +255,13 @@ document.addEventListener("change",function(e){
   if(t.name==="brand"){brand=t.value;buildStrings();}
   if(t.id==="str") buildColours();
   if(t.name==="colour"){$("colOther").hidden=t.value!=="Other"; if(t.value==="Other") $("colOther").focus();}
-  if(t.name==="day"){dayIdx=+t.value;slotSel=null;$("urgent").checked=false;drawSlots();}
-  if(t.name==="slot"){slotSel={date:SLOTDAYS[dayIdx].date,start:t.value};$("urgent").checked=false;$("urgentBox").classList.remove("on");}
-  if(t.id==="urgent"){$("urgentBox").classList.toggle("on",t.checked); if(t.checked){slotSel=null;drawSlots();}}
+  if(t.name==="day"){dayIdx=+t.value;slotSel=null;$("urgent").checked=false;drawSlots();drawSimple();}
+  if(t.name==="slot"){slotSel={date:SLOTDAYS[dayIdx].date,start:t.value};$("urgent").checked=false;$("urgentBox").classList.remove("on");drawSimple();}
+  if(t.name==="simple"){
+    var w=WINDOWS.filter(function(x){return x.id===t.value})[0], c=w&&windowChoice(w);
+    if(c){ slotSel={date:c.day.date,start:c.slot.start}; $("urgent").checked=false; $("urgentBox").classList.remove("on"); dayIdx=c.idx; drawDays(); drawSlots(); }
+  }
+  if(t.id==="urgent"){$("urgentBox").classList.toggle("on",t.checked); if(t.checked){slotSel=null;drawSlots();drawSimple();}}
   if(t.name==="adv"){$("advAmt").hidden=t.value!=="1"; if(t.value==="1")$("advAmt").focus();}
   if(t.id==="ph"||t.id==="nm") t.classList.remove("field-err");
   if(t.name==="setup"){ var help=t.value==="help"; $("helpBlk").hidden=!help; $("knowBlk").hidden=help; if(help) advise(); }
@@ -292,7 +340,7 @@ function payload(){
     if(b.colour==="Other") b.colour_other=$("colOther").value.trim();
     b.mains=String(T.mains); b.crosses=String(T.crosses); b.knots=radio("knots"); b.pre_stretch=radio("pre")==="1";
     b.urgent=$("urgent").checked;
-    if(radio("setup")==="help") b.help_choose=true;
+    if(radio("setup")==="help"||assistantApplied) b.help_choose=true;
     if(!b.urgent){b.slot_date=slotSel.date;b.slot_start=slotSel.start;}
     b.note=$("noteBad").value.trim();
   } else if(SPORT==="cricket"){
@@ -391,5 +439,16 @@ loadCatalogue().then(function(){
   if(s==="bad"||s==="badminton"||s==="string") go("badminton");
   else if(s==="cri"||s==="cricket"||s==="bat"||s==="bat") go("cricket");
   else if(s==="shoe") go("shoe");
+
 });
+
+// A narrow interface keeps the assistant and booking form in sync.
+window.SportlineBooking={catalogue:()=>CAT.filter(c=>c.sport==='badminton'&&c.price!=null&&c.active!==false),apply:function(key,mains,crosses){
+ var s=byKey(key);if(!s||s.sport!=='badminton'||s.price==null)return false;
+ if(SPORT!=='badminton'||$('flow').hidden)go('badminton');
+ buildBrands();brand=key.split('|')[0];var bi=document.querySelector('input[name="brand"][value="'+brand+'"]');if(bi)bi.checked=true;buildStrings();$('str').value=key;buildColours();
+ if(Number.isInteger(mains)&&Number.isInteger(crosses)&&mains>=18&&crosses<=35){T.mains=mains;T.crosses=crosses;}
+ $('mainsOut').innerHTML=T.mains+'<small>lbs</small>';$('crossesOut').innerHTML=T.crosses+'<small>lbs</small>';stepperState();
+ assistantApplied=true;var know=document.querySelector('input[name="setup"][value="know"]');if(know)know.checked=true;$('helpBlk').hidden=true;$('knowBlk').hidden=false;render();return true;
+}};
 })();

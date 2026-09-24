@@ -136,11 +136,7 @@ $("search").oninput=draw; $("shopF").onchange=draw;
 function count(st){return JOBS.filter(function(j){return j.status===st}).length}
 function drawStats(){
   var over=JOBS.filter(overdue).length;
-  var items=[["Requested","New",count("Requested"),count("Requested")>0],
-             ["Accepted","Confirmed",count("Accepted"),false],
-             ["At the bench","On the bench",count("At the bench"),over>0],
-             ["Ready","Ready",count("Ready"),false],
-             ["urgent","Urgent left today",URGENT_LEFT==null?"–":URGENT_LEFT,false]];
+  var items=[["active","All active",JOBS.filter(j=>ACTIVE.includes(j.status)).length,false],["Requested","New",count("Requested"),count("Requested")>0],["working","In progress",count("Accepted")+count("At the bench"),over>0],["Ready","Ready",count("Ready"),false]];
   $("stats").innerHTML=items.map(function(i){
     return '<button type="button" class="stat'+(VIEW===i[0]?" on":"")+(i[3]?" alert":"")+'" data-v="'+i[0]+'"><div class="n">'+i[2]+'</div><div class="l">'+i[1]+'</div></button>';
   }).join("");
@@ -152,7 +148,8 @@ function visible(){
   var q=$("search").value.trim().toLowerCase(), shop=$("shopF").value;
   return JOBS.filter(function(j){
     if(VIEW==="active"&&ACTIVE.indexOf(j.status)<0) return false;
-    if(VIEW!=="active"&&j.status!==VIEW) return false;
+    if(VIEW==="working"&&!(["Accepted","At the bench"].includes(j.status)))return false;
+    if(VIEW!=="active"&&VIEW!=="working"&&j.status!==VIEW)return false;
     if(shop&&j.shop!==shop) return false;
     if(q&&[j.code,j.customer_name,j.phone,j.gear].join(" ").toLowerCase().indexOf(q)<0) return false;
     return true;
@@ -234,9 +231,11 @@ function detail(j){
   right+=row("Balance",'<span style="color:'+(balance(j)?"var(--amber)":"var(--ok)")+'">'+R(balance(j))+'</span>');
   right+=row("Pays by",esc(j.pay_method||r.payment||""));
   if(advanceIntent(j)) right+=row("Said they'd pay",R(advanceIntent(j))+" advance");
+  right+=row("Sportline credit",'<span style="color:var(--ok)">'+R(j.loyalty_balance||0)+' available</span>');
   var html='<div class="jb">'+(flags.length?flags.map(function(f){return '<div class="flag">'+f+'</div>'}).join(""):"")
-    +'<div class="grid2" style="margin-top:'+(flags.length?"14px":"0")+'"><div class="kv">'+left+'</div><div class="kv">'+right+'</div></div>'
-    +actions(j)+'</div>';
+    +'<p class="counter-contact">'+esc(j.phone)+' · '+esc(j.gear||sportName(j))+'</p>'
+    +'<div class="counter-money"><span>'+ (j.final_total==null?'Estimate':'Agreed')+'<b>'+R(due(j))+'</b></span><span>Paid<b>'+R(j.paid_total||0)+'</b></span><span>Balance<b>'+(j.needs_quote&&j.final_total==null?'To confirm':R(balance(j)))+'</b></span></div>'
+    +actions(j)+'<details class="counter-details"><summary>Job details & charges</summary><div class="grid2"><div class="kv">'+left+'</div><div class="kv">'+right+'</div></div></details></div>';
   return html;
 }
 function actions(j){
@@ -245,20 +244,21 @@ function actions(j){
     a.push('<div class="inline"><span class="small">Agreed price</span><input class="inp" type="number" inputmode="numeric" min="0" id="price-'+j.id+'" value="'+(j.needs_quote?"":due(j))+'" placeholder="₹">'
       +'<button class="btn chrome" type="button" data-act="accept" data-id="'+j.id+'">Accept job</button></div>');
   }
-  var btns=[];
+  var btns=[],more=[];
   if(st==="Accepted") btns.push('<button class="btn chrome" type="button" data-act="start" data-id="'+j.id+'">Start work</button>');
   if(st==="At the bench") btns.push('<button class="btn chrome" type="button" data-act="ready" data-id="'+j.id+'">Mark ready</button>');
-  if(st==="Ready") btns.push('<button class="btn red" type="button" data-act="collect" data-id="'+j.id+'"'+(j.paid?"":" disabled title=\"Take the balance first\"")+'>Handed over</button>');
+  if(st==="Ready"&&j.paid) btns.push('<button class="btn red" type="button" data-act="collect" data-id="'+j.id+'"'+(j.paid?"":" disabled title=\"Take the balance first\"")+'>Handed over</button>');
   if(open && !j.paid && st!=="Requested") btns.push('<button class="btn" type="button" data-pay="'+j.id+'">Take payment</button>');
   if(st==="Requested"&&!j.needs_quote) btns.push('<button class="btn" type="button" data-pay="'+j.id+'">Take advance</button>');
-  if(st==="Ready") btns.push('<a class="btn" target="_blank" rel="noopener" href="'+readyWA(j)+'">WhatsApp: ready</a>');
-  else if(open) btns.push('<a class="btn" target="_blank" rel="noopener" href="'+readyWA(j)+'">WhatsApp update</a>');
-  btns.push('<button class="btn" type="button" data-slip="'+j.id+'">Print slip</button>');
-  if(rd(j).marketing_opt_in===true) btns.push('<button class="btn" type="button" data-offers="'+j.id+'">Confirm offers opt-in</button>');
-  btns.push('<button class="btn" type="button" data-stop-offers="'+j.id+'">Stop offers</button>');
-  if((st==="Requested"||st==="Accepted")&&!j.paid&&!(j.paid_total>0)) btns.push('<button class="btn" type="button" data-act="cancel" data-id="'+j.id+'" style="margin-left:auto">Cancel</button>');
+  if(st==="Ready") more.push('<a class="btn" target="_blank" rel="noopener" href="'+readyWA(j)+'">WhatsApp: ready</a>');
+  else if(open) more.push('<a class="btn" target="_blank" rel="noopener" href="'+readyWA(j)+'">WhatsApp update</a>');
+  more.push('<button class="btn" type="button" data-slip="'+j.id+'">Print slip</button>');
+  if(rd(j).marketing_opt_in===true) more.push('<button class="btn" type="button" data-offers="'+j.id+'">Confirm offers + ₹20 credit</button>');
+  more.push('<button class="btn" type="button" data-stop-offers="'+j.id+'">Stop offers</button>');
+  if((st==="Requested"||st==="Accepted")&&!j.paid&&!(j.paid_total>0)) more.push('<button class="btn" type="button" data-act="cancel" data-id="'+j.id+'" style="margin-left:auto">Cancel</button>');
   a.push('<div class="acts">'+btns.join("")+'</div>');
   a.push('<div id="payBox-'+j.id+'" hidden></div>');
+  a.push('<details class="counter-details"><summary>WhatsApp, print & other actions</summary><div class="acts">'+more.join('')+'</div></details>');
   return a.join("");
 }
 function readyWA(j){
@@ -290,7 +290,9 @@ function wire(){
   Array.prototype.forEach.call(document.querySelectorAll("[data-offers]"),function(b){
     b.onclick=function(){ var j=byId(b.getAttribute("data-offers"));if(!confirm("Has this customer confirmed they want offers for 12 months?"))return;b.disabled=true;
       rpc("pilot_marketing_consent",{p_order:j.id,p_opt_in:true})
-      .then(function(){ b.textContent="Offers confirmed"; showOk(j.customer_name+" added to the offers list for 12 months."); })
+      .then(function(){ return rpc("pilot_loyalty_welcome",{p_phone:j.phone}); })
+      .then(function(w){ b.textContent="Offers confirmed";
+        showOk(j.customer_name+" added to the offers list for 12 months."+(w&&w.awarded?" ₹20 welcome credit added.":"")); return load(false); })
       .catch(function(e){ b.disabled=false; showErr(e.message); }); };
   });
 }
@@ -313,12 +315,14 @@ function act(j,action,btn){
 function payForm(j){
   var box=$("payBox-"+j.id); if(!box) return;
   if(!box.hidden){ box.hidden=true; return; }
-  var bal=balance(j), method=j.pay_method||rd(j).payment||"UPI";
+  var bal=balance(j), method=j.pay_method||rd(j).payment||"UPI", credit=j.loyalty_balance||0;
   var suggest=j.status==="Requested"?(advanceIntent(j)||""):bal;
+  var methods=["UPI","Cash","Card"];
   box.innerHTML='<div class="inline"><span class="small">Amount</span>'
     +'<input class="inp" type="number" inputmode="numeric" min="1" id="amt-'+j.id+'" value="'+suggest+'" placeholder="₹">'
-    +'<div class="chips">'+["UPI","Cash","Card"].map(function(m){
-      return '<label class="chip"><input type="radio" name="pm-'+j.id+'" value="'+m+'"'+(m===method?" checked":"")+'><span>'+m+'</span></label>'}).join("")+'</div>'
+    +'<div class="chips">'+methods.map(function(m){
+      return '<label class="chip"><input type="radio" name="pm-'+j.id+'" value="'+m+'"'+(m===method?" checked":"")+'><span>'+m+'</span></label>'}).join("")
+    +(credit>0?'<label class="chip"><input type="radio" name="pm-'+j.id+'" value="Credit"><span>Credit · '+R(credit)+' available</span></label>':'')+'</div>'
     +'<button class="btn red" type="button" id="payGo-'+j.id+'">Record</button>'
     +'<span class="small" style="width:100%">Balance before this: '+R(bal)+'. The job marks itself paid when the balance reaches zero.</span></div>';
   box.hidden=false;
@@ -327,12 +331,17 @@ function payForm(j){
     var amt=Number($("amt-"+j.id).value), m=(document.querySelector('input[name="pm-'+j.id+'"]:checked')||{}).value;
     if(!Number.isInteger(amt)||amt<=0){ showErr("Enter the amount received."); return; }
     if(amt>bal){showErr("Amount exceeds the balance.");return;}
-    if(!confirm("Record "+R(amt)+" received by "+m+" for "+j.code+"?"))return;
+    if(m==="Credit"&&amt>credit){showErr("More than their credit balance of "+R(credit)+".");return;}
+    if(!confirm("Record "+R(amt)+" "+(m==="Credit"?"in Sportline credit":"received by "+m)+" for "+j.code+"?"))return;
     var kind=(j.status==="Requested"||(j.status==="Accepted"&&!(j.paid_total>0)))?"advance":(amt>=bal?"balance":"part");
     var fingerprint=[j.id,amt,m,kind].join("|"),key;try{key=sessionStorage.getItem("payment:"+fingerprint);}catch(e){}if(!key)key=crypto.randomUUID();try{sessionStorage.setItem("payment:"+fingerprint,key);}catch(e){}
     BUSY=true;this.disabled=true;
-    rpc("pilot_record_payment_v3",{p_order:j.id,p_amount:amt,p_method:m,p_kind:kind,p_key:key})
-    .then(function(r){BUSY=false;box.hidden=true;try{sessionStorage.removeItem("payment:"+fingerprint);}catch(e){} showOk(R(amt)+" "+m+" recorded for "+j.code+". Balance "+R(r.balance)+(r.paid?" — fully paid.":".")); return load(false); })
+    var call=m==="Credit"
+      ? rpc("pilot_loyalty_redeem_v2",{p_order:j.id,p_amount:amt,p_kind:kind,p_key:key})
+      : rpc("pilot_record_payment_v3",{p_order:j.id,p_amount:amt,p_method:m,p_kind:kind,p_key:key});
+    call
+    .then(function(r){BUSY=false;box.hidden=true;try{sessionStorage.removeItem("payment:"+fingerprint);}catch(e){}
+      showOk(R(amt)+" "+(m==="Credit"?"credit":m)+" recorded for "+j.code+". Balance "+R(r.balance)+(r.paid?" — fully paid.":".")); return load(false); })
     .catch(function(e){BUSY=false;showErr(e.message);var b=$("payGo-"+j.id);if(b)b.disabled=false;});
   };
 }

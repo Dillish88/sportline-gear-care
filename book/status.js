@@ -20,9 +20,12 @@ function fmtTime(hm){var p=hm.split(":"),h=+p[0];return (h%12||12)+":"+p[1]+(h<1
 var token=(location.hash.match(/(?:t=)?([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/i)||[])[1];
 function load(){
   if(!token){ $("app").innerHTML='<div class="msg">This link is incomplete. Use the full link from your booking message.</div>'; return; }
-  fetch(CFG.url+"/rest/v1/rpc/pilot_track_booking_v2",{method:"POST",signal:AbortSignal.timeout(20000),
-    headers:{"apikey":CFG.key,"Content-Type":"application/json"},body:JSON.stringify({p_token:token})})
-  .then(function(r){if(!r.ok)throw new Error("Unable to load");return r.json()})
+  function call(fn,body){
+    return fetch(CFG.url+"/rest/v1/rpc/"+fn,{method:"POST",signal:AbortSignal.timeout(20000),
+      headers:{"apikey":CFG.key,"Content-Type":"application/json"},body:JSON.stringify(body)})
+    .then(function(r){if(!r.ok)throw new Error("Unable to load");return r.json()});
+  }
+  call("pilot_track_booking_v2",{p_token:token})
   .then(function(b){
     if(!b||!b.code){ $("app").innerHTML='<div class="msg">We couldn\u2019t find that booking. Check the link, or call the shop.</div>'; return; }
     draw(b);
@@ -52,6 +55,7 @@ function draw(b){
       '<div><span>Drop-off</span><span>'+(b.shop==="5th"?"5th Avenue":"6th Avenue")+'</span></div>'+
       (b.pay_method?'<div><span>Payment</span><span>'+esc(b.pay_method)+'</span></div>':'')+
     '</div>'+
+    '<p class="sub">Ask the counter team to check or use your Sportline credit.</p>'+
     '<p class="step">Charges</p><div class="card kv">'+lines+
       '<div class="big"><span>'+(b.final_total!=null?"Total":"Estimate")+'</span><span>'+(b.needs_quote&&b.final_total==null&&!b.estimate?"After inspection":R(total))+'</span></div>'+
       '<div><span>Paid so far</span><span>'+R(b.paid_total)+'</span></div>'+

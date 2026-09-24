@@ -307,9 +307,17 @@ html,body{max-width:100%;overflow-x:clip}
 
       <p class="step" data-n>Ready by</p>
       <div class="card">
-        <div class="days chips" id="days"></div>
-        <div class="slots" id="slots"></div>
-        <p class="slotnote" id="slotNote"></p><p class="slotnote">20 bookings per day · Break 2:00–2:30pm. Ready-by times assume your racket reaches the 6th Avenue bench before the slot starts.</p>
+        <div id="simpleBlk">
+          <div class="chips" id="simple"></div>
+          <button class="back" type="button" id="exactToggle" style="margin-top:6px;text-transform:none;letter-spacing:0;font-size:13.5px">Choose an exact time →</button>
+        </div>
+        <div id="exactBlk" hidden>
+          <div class="days chips" id="days"></div>
+          <div class="slots" id="slots"></div>
+          <p class="slotnote" id="slotNote"></p>
+          <button class="back" type="button" id="simpleToggle" style="margin-top:6px;text-transform:none;letter-spacing:0;font-size:13.5px">← Back to simple times</button>
+        </div>
+        <p class="slotnote">20 bookings per day · Break 2:00–2:30pm. Ready-by times assume your racket reaches the 6th Avenue bench before the slot starts.</p>
         <label class="urgent" id="urgentBox" hidden>
           <input type="checkbox" id="urgent">
           <span><b>Urgent — earliest available slot</b>
@@ -360,6 +368,10 @@ html,body{max-width:100%;overflow-x:clip}
 
     <!-- payment, all services -->
     <p class="step" data-n>Payment</p>
+    <div class="card" style="margin-bottom:14px">
+      <b style="font-size:13.5px">Sportline credit</b>
+      <p class="slotnote" style="margin:4px 0 0">Earn 5% back in credit on every completed job. Spend it at the counter next time — no card, no app, just your phone number.</p>
+    </div>
     <div class="card">
       <div class="chips">
         <label class="chip"><input type="radio" name="pay" value="UPI" checked><span>UPI</span></label>
@@ -377,7 +389,7 @@ html,body{max-width:100%;overflow-x:clip}
       <p class="slotnote">Nothing is charged online. Anything you pay at the counter is recorded, and your status page shows what's paid and the balance.</p>
       <label class="opt" style="border-bottom:0;padding-bottom:0;margin-top:6px">
         <input type="checkbox" id="offers">
-        <span><b style="font-size:13.5px">Send me offers and new arrivals on WhatsApp</b><span class="d">Optional. Stop any time by replying STOP.</span></span>
+        <span><b style="font-size:13.5px">Send me offers and new arrivals on WhatsApp</b><span class="d">Optional. Staff can confirm your opt-in and add a one-time ₹20 credit. Stop any time by replying STOP.</span></span>
       </label>
     </div>
     <p class="slotnote" style="margin-top:14px">Personal repair details are removed 12 months after collection or cancellation. Optional offers consent is separate, confirmed by staff and valid for 12 months.</p>
@@ -425,5 +437,6 @@ html,body{max-width:100%;overflow-x:clip}
 </div>
 
 <script src="/pilot/config.js"></script><script src="index.js"></script>
-<script src="carousel.js"></script></body>
+<script src="carousel.js"></script>
+<script src="chatbot.js"></script></body>
 </html>

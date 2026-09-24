@@ -15,14 +15,11 @@ WhatsApp is staff-reviewed and manually sent; this app cannot confirm delivery.
 Personal repair details are anonymised 12 months after collection/cancellation.
 Separate staff-confirmed offers opt-ins expire after 12 months or on withdrawal.
 
-Run db/pilot.sql, db/pilot-catalogue.sql, db/pilot-staff.sql, then
-db/pilot-maintenance.sql and db/pilot-retention-schedule.sql in Supabase.
-Existing installations also need db/pilot-booking-v3.sql. Apply it last; it supersedes previous booking/payment function definitions. Apply SQL before deploying
-the catalogue-reading frontend. See setup instructions and migration tests.
+For database installation and updates, follow [db/MIGRATIONS.md](db/MIGRATIONS.md). Do not replay older booking/payment functions over the current loyalty installation.
 
 Customer QR parameters: shop=6th or 5th, src=counter-6th (or another source),
 sport=badminton or cricket; legacy svc=string or bat is also accepted.
-QR links use /pilot/?shop=6th&src=counter-6th#booking. Confirm domain ownership,
+QR links use /book/?shop=6th&src=counter-6th. Confirm domain ownership,
 renewal and mobile-data access before printing; localhost links cannot work for customers.
 
-Photo: Glen Carrie / Unsplash, attribution retained in the customer footer.
+The landing page uses the owner-supplied rotating V2 carousel with no photos.

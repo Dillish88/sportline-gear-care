@@ -163,7 +163,7 @@ function drawSlots(){
   var todayFull=freeCount(SLOTDAYS[0])===0;
   $("slotNote").textContent=(dayIdx>0&&todayFull
       ?"Today's slots are closed or full, so we've opened the next day. "
-      :"")+"Pick when you want it ready. Drop it off at least 30 minutes before. "+d.day_left+" left on this day.";
+      :"")+"Pick when you want it ready. Drop it off at least 30 minutes before. "+freeCount(d)+" available times on this day.";
 }
 
 /* ---------------- totals ---------------- */

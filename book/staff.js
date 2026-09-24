@@ -29,8 +29,9 @@ function fresh(){
   if(!SESS) return Promise.reject(new Error("Signed out."));
   if(SESS.expires_at-Date.now()>60000) return Promise.resolve(SESS);
   if(refreshing)return refreshing;
+  var refreshEpoch=EPOCH;
   refreshing=authCall("refresh_token",{refresh_token:SESS.refresh_token})
-    .then(function(s){ s.email=s.email||SESS.email; saveSess(s); return s; })
+    .then(function(s){if(refreshEpoch!==EPOCH||!SESS)throw new Error("Signed out.");s.email=s.email||SESS.email;saveSess(s);return s;})
     .catch(function(e){ signOut(); throw new Error("Your session ended. Please sign in again."); }).finally(function(){refreshing=null;});
   return refreshing;
 }
@@ -175,6 +176,7 @@ function whenCell(j){
   if(r.needed) return '<div class="t" style="font-size:18px">'+esc(r.needed)+'</div><div class="d">Requested</div>';
   return '<div class="t" style="font-size:18px">'+(j.sport==="badminton"?"—":"Look first")+'</div><div class="d">'+esc(sportName(j))+'</div>';
 }
+function advanceIntent(j){var a=Number(j.advance_intent||rd(j).advance||0);return Number.isSafeInteger(a)&&a>0&&a<=due(j)?a:0;}
 function due(j){ return j.final_total!=null?j.final_total:j.estimate; }
 function balance(j){ return Math.max((due(j)||0)-(j.paid_total||0),0); }
 function badges(j){
@@ -231,7 +233,7 @@ function detail(j){
   right+=row("Paid so far",R(j.paid_total||0));
   right+=row("Balance",'<span style="color:'+(balance(j)?"var(--amber)":"var(--ok)")+'">'+R(balance(j))+'</span>');
   right+=row("Pays by",esc(j.pay_method||r.payment||""));
-  if(j.advance_intent) right+=row("Said they'd pay",R(j.advance_intent)+" advance");
+  if(advanceIntent(j)) right+=row("Said they'd pay",R(advanceIntent(j))+" advance");
   var html='<div class="jb">'+(flags.length?flags.map(function(f){return '<div class="flag">'+f+'</div>'}).join(""):"")
     +'<div class="grid2" style="margin-top:'+(flags.length?"14px":"0")+'"><div class="kv">'+left+'</div><div class="kv">'+right+'</div></div>'
     +actions(j)+'</div>';
@@ -240,7 +242,7 @@ function detail(j){
 function actions(j){
   var a=[], st=j.status, open=ACTIVE.indexOf(st)>=0;
   if(st==="Requested"){
-    a.push('<div class="inline"><span class="small">Agreed price</span><input class="inp" type="number" inputmode="numeric" min="0" id="price-'+j.id+'" value="'+(j.needs_quote&&!j.estimate?"":due(j))+'" placeholder="₹">'
+    a.push('<div class="inline"><span class="small">Agreed price</span><input class="inp" type="number" inputmode="numeric" min="0" id="price-'+j.id+'" value="'+(j.needs_quote?"":due(j))+'" placeholder="₹">'
       +'<button class="btn chrome" type="button" data-act="accept" data-id="'+j.id+'">Accept job</button></div>');
   }
   var btns=[];
@@ -250,7 +252,7 @@ function actions(j){
   if(open && !j.paid && st!=="Requested") btns.push('<button class="btn" type="button" data-pay="'+j.id+'">Take payment</button>');
   if(st==="Requested"&&!j.needs_quote) btns.push('<button class="btn" type="button" data-pay="'+j.id+'">Take advance</button>');
   if(st==="Ready") btns.push('<a class="btn" target="_blank" rel="noopener" href="'+readyWA(j)+'">WhatsApp: ready</a>');
-  else if(open) btns.push('<a class="btn" target="_blank" rel="noopener" href="https://wa.me/91'+esc(j.phone)+'">WhatsApp</a>');
+  else if(open) btns.push('<a class="btn" target="_blank" rel="noopener" href="'+readyWA(j)+'">WhatsApp update</a>');
   btns.push('<button class="btn" type="button" data-slip="'+j.id+'">Print slip</button>');
   if(rd(j).marketing_opt_in===true) btns.push('<button class="btn" type="button" data-offers="'+j.id+'">Confirm offers opt-in</button>');
   btns.push('<button class="btn" type="button" data-stop-offers="'+j.id+'">Stop offers</button>');
@@ -263,6 +265,8 @@ function readyWA(j){
   var bal=balance(j);
   var t="Hi "+j.customer_name+", your "+(j.sport==="badminton"?"racket":j.sport==="cricket"?"bat":"shoes")+" ("+j.code+") is ready to collect at Sportline "
     +(j.shop==="5th"?"5th Avenue":"6th Avenue")+"."+(bal?" Balance: "+R(bal)+".":" Fully paid.")+" Open 10:30am–9pm. Thank you!";
+  if(j.status!=="Ready")t="Hi "+j.customer_name+", Sportline booking "+j.code+". Status: "+(LABEL[j.status]||j.status)+".";
+  if(j.ready_by)t+="\nReady by: "+dayWord(j.slot_date)+" "+fmt(j.ready_by);
   t+="\n"+summary(j)+"\nTotal (tax inclusive): "+R(due(j))+" · Paid: "+R(j.paid_total||0)+" · Balance: "+R(bal);
   if(j.status_token)t+="\nStatus: "+new URL("status.html",location.href).href+"#t="+j.status_token;
   return "https://wa.me/91"+j.phone+"?text="+encodeURIComponent(t);
@@ -310,7 +314,7 @@ function payForm(j){
   var box=$("payBox-"+j.id); if(!box) return;
   if(!box.hidden){ box.hidden=true; return; }
   var bal=balance(j), method=j.pay_method||rd(j).payment||"UPI";
-  var suggest=j.status==="Requested"?(j.advance_intent||""):bal;
+  var suggest=j.status==="Requested"?(advanceIntent(j)||""):bal;
   box.innerHTML='<div class="inline"><span class="small">Amount</span>'
     +'<input class="inp" type="number" inputmode="numeric" min="1" id="amt-'+j.id+'" value="'+suggest+'" placeholder="₹">'
     +'<div class="chips">'+["UPI","Cash","Card"].map(function(m){

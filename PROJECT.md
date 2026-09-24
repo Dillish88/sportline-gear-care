@@ -1,13 +1,13 @@
-# Current pilot decisions — 20 September 2026
+# Current pilot decisions — 24 September 2026
 
 The original handoff brief follows, preserved as historical context. These current decisions take precedence where it differs.
 
-- `/pilot/` is the only customer booking application; root and retired routes redirect to it.
+- `/book/` is the only customer booking application; root and retired routes redirect to it.
 - 6th Avenue is the bench; 5th Avenue is drop/collection only. No Purasaiwalkam or rider pickup.
 - Customer repair details are anonymised 12 months after collection/cancellation. Open jobs require review, not silent deletion.
 - Offers require a separate optional opt-in, confirmed by staff at the counter. Marketing contact permission lasts 12 months and can be withdrawn.
 - Staff review and send WhatsApp updates manually. No automatic sending or delivery confirmation.
-- Keep conditional ₹100 priority until Akbar confirms whether a one-hour commitment is feasible.
+- 20 badminton slots per day, 10:30am–9pm with a 2:00–2:30pm break. Slot end is ready-by; racket must reach the bench before start. Urgent costs ₹100 for the earliest available slot within that capacity.
 - Missing prices await Shankar; do not invent prices.
 - Tax-inclusive service prices; split GST treatment awaits the CA. No financial saving is assumed.
 - Domain control and renewal must be settled before printing permanent QR posters.

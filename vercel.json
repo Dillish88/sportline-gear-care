@@ -2,38 +2,58 @@
   "redirects": [
     {
       "source": "/",
-      "destination": "/pilot/",
+      "destination": "/book/",
       "permanent": true
     },
     {
       "source": "/index.html",
-      "destination": "/pilot/",
+      "destination": "/book/",
       "permanent": true
     },
     {
       "source": "/concept",
-      "destination": "/pilot/",
+      "destination": "/book/",
       "permanent": true
     },
     {
       "source": "/concept/:path*",
-      "destination": "/pilot/",
+      "destination": "/book/",
       "permanent": true
     },
     {
       "source": "/gear-care.html",
-      "destination": "/pilot/",
+      "destination": "/book/",
       "permanent": true
     },
     {
       "source": "/stringing.html",
-      "destination": "/pilot/",
+      "destination": "/book/",
       "permanent": true
     },
     {
       "source": "/concept/",
-      "destination": "/pilot/",
+      "destination": "/book/",
       "permanent": true
+    },
+    {
+      "source": "/pilot",
+      "destination": "/book/",
+      "permanent": false
+    },
+    {
+      "source": "/pilot/",
+      "destination": "/book/",
+      "permanent": false
+    },
+    {
+      "source": "/pilot/index.html",
+      "destination": "/book/",
+      "permanent": false
+    },
+    {
+      "source": "/pilot/staff.html",
+      "destination": "/book/staff.html",
+      "permanent": false
     }
   ]
 }

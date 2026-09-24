@@ -1,0 +1,19 @@
+.land{overflow:hidden;padding-left:0;padding-right:0}
+.land .eyebrow{margin-bottom:30px}
+.tiles{display:flex;max-width:1040px;gap:16px;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;padding:8px max(22px,calc((100% - 680px)/2)) 14px;scroll-padding-inline:max(22px,calc((100% - 680px)/2));overscroll-behavior-x:contain;max-width:100%}
+.tiles::-webkit-scrollbar{display:none}
+.tile{flex:0 0 min(680px,82vw);min-height:260px;scroll-snap-align:center;overflow:hidden;padding:34px;border-radius:14px;transform:none}
+.tile:hover{transform:none}
+.tile .t{font-size:64px}.tile .d{max-width:80%;font-size:14px}
+.tile::before{content:'01';position:absolute;right:22px;bottom:-22px;font-family:var(--head);font-size:180px;line-height:1;color:rgba(255,255,255,.035);pointer-events:none}
+.tile:nth-child(2)::before{content:'02'}.tile:nth-child(3)::before{content:'03'}
+.carousel-controls{display:flex;align-items:center;gap:28px;margin-top:22px}
+.carousel-controls>button{width:44px;height:44px;border-radius:50%;border:1px solid var(--line-2);color:var(--text);background:var(--panel);font-size:20px;cursor:pointer}
+.carousel-controls>button:disabled{opacity:.3;cursor:default}
+.carousel-dots{display:flex;gap:6px}.carousel-dots button{width:30px;height:30px;padding:0;background:transparent;border:0;cursor:pointer;position:relative}
+.carousel-dots button::after{content:'';display:block;width:7px;height:7px;border-radius:5px;background:var(--muted);margin:auto;transition:width .2s,background .2s}
+.carousel-dots button[aria-current="true"]::after{width:25px;background:var(--red-lit)}
+.carousel-hint{font-size:11px;color:var(--muted);letter-spacing:.08em;margin:12px 0 0}.landfoot{padding:0 22px;margin-top:26px}
+.stepper{min-width:0}.stepper .row{gap:6px}.pm{flex-shrink:0}
+@media(max-width:460px){.tile{min-height:220px;padding:26px}.tile .t{font-size:52px}.tens{grid-template-columns:1fr}.go{padding:15px 18px;font-size:12px}.done .code{font-size:46px}.kv span{overflow-wrap:anywhere}.urgent{gap:8px;padding:12px}.urgent .p{padding-left:0}}
+@media(prefers-reduced-motion:reduce){.carousel-dots button::after{transition:none}}

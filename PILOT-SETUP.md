@@ -1,3 +1,7 @@
+# Current release — 24 September 2026
+
+Use /book/ and /book/staff.html. Apply db/pilot-booking-v3.sql last after the migrations below; it contains the final slot and retry-safe payment functions. Old public booking APIs enforce the same slot rules. Existing links keep working. Staff sessions now persist on the shop browser until sign-out. Tests: tests/pilot-booking-v3.mjs and tests/book-browser.mjs. See book/README.md for current behavior. Historical setup below predates the approved version.
+
 # Current maintenance update
 
 Production maintenance was applied on 20 September 2026. The four legacy tables

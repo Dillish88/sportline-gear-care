@@ -1,19 +1,117 @@
+/* =====================================================================
+   Service carousel — 3D coverflow.
+   Active card centred at full size; neighbours sit behind, turned in.
+   Loops, so there is always one card either side. Swipe, drag, arrows,
+   dots, keyboard and trackpad all work. No images, no external requests.
+   #services is used for specificity so the base .tile rules can't win.
+   ===================================================================== */
 .land{overflow:hidden;padding-left:0;padding-right:0}
-.land .eyebrow{margin-bottom:30px}
-.tiles{display:flex;max-width:1040px;gap:16px;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;padding:8px max(22px,calc((100% - 680px)/2)) 14px;scroll-padding-inline:max(22px,calc((100% - 680px)/2));overscroll-behavior-x:contain;max-width:100%}
-.tiles::-webkit-scrollbar{display:none}
-.tile{flex:0 0 min(680px,82vw);min-height:260px;scroll-snap-align:center;overflow:hidden;padding:34px;border-radius:14px;transform:none}
-.tile:hover{transform:none}
-.tile .t{font-size:64px}.tile .d{max-width:80%;font-size:14px}
-.tile::before{content:'01';position:absolute;right:22px;bottom:-22px;font-family:var(--head);font-size:180px;line-height:1;color:rgba(255,255,255,.035);pointer-events:none}
-.tile:nth-child(2)::before{content:'02'}.tile:nth-child(3)::before{content:'03'}
-.carousel-controls{display:flex;align-items:center;gap:28px;margin-top:22px}
-.carousel-controls>button{width:44px;height:44px;border-radius:50%;border:1px solid var(--line-2);color:var(--text);background:var(--panel);font-size:20px;cursor:pointer}
+.land .eyebrow{margin-bottom:14px}
+
+#services{
+  --card-w:min(300px,66vw);
+  --card-h:clamp(300px,50vh,392px);
+  --drag:0px;
+  position:relative;display:block;width:100%;max-width:100%;
+  height:calc(var(--card-h) + 36px);margin:0;padding:0;
+  perspective:1400px;perspective-origin:50% 45%;
+  touch-action:pan-y;user-select:none;-webkit-user-select:none;
+  outline:none;cursor:grab
+}
+#services.dragging{cursor:grabbing}
+
+#services .tile,
+#services .tile:hover{
+  --x:0%;--z:0px;--r:0deg;--s:1;--o:1;--dim:0;
+  position:absolute;left:50%;top:50%;
+  width:var(--card-w);height:var(--card-h);min-height:0;margin:0;
+  display:flex;flex-direction:column;justify-content:flex-end;
+  padding:28px 26px 26px;text-align:left;color:var(--text);cursor:pointer;
+  border-radius:22px;border:1px solid rgba(255,255,255,.13);overflow:hidden;
+  background:
+    radial-gradient(120% 70% at 50% 112%,var(--accent,rgba(160,185,210,.26)) 0%,transparent 62%),
+    linear-gradient(180deg,#181b21 0%,#0c0e12 100%);
+  box-shadow:0 34px 60px -24px rgba(0,0,0,.85),inset 0 1px 0 rgba(255,255,255,.08);
+  transform:translate(-50%,-50%) translateX(calc(var(--x) + var(--drag))) translateZ(var(--z)) rotateY(var(--r)) scale(var(--s));
+  opacity:var(--o);
+  transition:transform .6s cubic-bezier(.2,.8,.2,1),opacity .45s ease,border-color .3s ease;
+  will-change:transform;backface-visibility:hidden;-webkit-tap-highlight-color:transparent
+}
+#services .tile:nth-child(1){--accent:rgba(160,185,210,.30)}   /* badminton — cool silver  */
+#services .tile:nth-child(2){--accent:rgba(232,210,160,.28)}   /* cricket   — willow gold  */
+#services .tile:nth-child(3){--accent:rgba(227,30,36,.32)}     /* shoe      — brand red    */
+
+/* positions, set by carousel.js */
+#services .tile[data-pos="0"]{--x:0%;--z:0px;--r:0deg;--s:1;--o:1;--dim:0;z-index:3;border-color:rgba(255,255,255,.3)}
+#services .tile[data-pos="-1"]{--x:-72%;--z:-150px;--r:24deg;--s:.84;--o:.72;--dim:.5;z-index:2}
+#services .tile[data-pos="1"]{--x:72%;--z:-150px;--r:-24deg;--s:.84;--o:.72;--dim:.5;z-index:2}
+#services .tile[data-pos="hidden"]{--z:-300px;--s:.6;--o:0;z-index:1;pointer-events:none}
+/* phones: narrower centre card, gentler angle, neighbours pulled in so they read as cards */
+@media(max-width:899px){
+  #services{--card-w:min(272px,60vw)}
+  #services .tile,#services .tile:hover{padding:24px 22px 22px}
+  #services .tile[data-pos="-1"]{--x:-66%;--z:-110px;--r:16deg;--s:.82;--o:.8;--dim:.58}
+  #services .tile[data-pos="1"]{--x:66%;--z:-110px;--r:-16deg;--s:.82;--o:.8;--dim:.58}
+  #services .tile .t{font-size:clamp(40px,11.5vw,56px)}
+  #services .tile::before{font-size:104px}
+}
+@media(min-width:900px){
+  #services{--card-w:320px}
+  #services .tile[data-pos="-1"]{--x:-92%}
+  #services .tile[data-pos="1"]{--x:92%}
+}
+
+/* side cards darken so the centre reads first */
+#services .tile::after{
+  content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;
+  background:#050607;opacity:var(--dim);transition:opacity .45s ease
+}
+/* top sheen on the active card */
+#services .tile[data-pos="0"]{box-shadow:0 40px 70px -24px rgba(0,0,0,.9),0 0 0 1px rgba(255,255,255,.04),inset 0 1px 0 rgba(255,255,255,.16)}
+
+/* a card crossing from one side to the other fades instead of sweeping behind */
+#services .tile.wrap{transition:none!important;opacity:0!important}
+#services.dragging .tile{transition:none}
+
+/* ghost numeral, top right */
+#services .tile::before{
+  content:'01';position:absolute;right:18px;top:6px;bottom:auto;
+  font-family:var(--head);font-size:128px;line-height:1;color:rgba(255,255,255,.05);pointer-events:none
+}
+#services .tile:nth-child(2)::before{content:'02'}
+#services .tile:nth-child(3)::before{content:'03'}
+
+#services .tile .a{display:none}
+#services .tile .t{font-size:clamp(46px,13vw,60px);line-height:.92;display:block}
+#services .tile .d{font-size:13.5px;color:var(--muted);margin-top:10px;max-width:none;display:block}
+#services .tile .cta{
+  align-self:flex-start;margin-top:20px;display:inline-flex;align-items:center;gap:8px;
+  min-height:42px;padding:10px 18px;border-radius:999px;
+  background:linear-gradient(180deg,var(--red-lit),var(--red));color:#fff;
+  font-size:11.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;
+  box-shadow:0 0 24px rgba(227,30,36,.3);
+  opacity:0;transform:translateY(8px);transition:opacity .35s ease .1s,transform .35s ease .1s
+}
+#services .tile[data-pos="0"] .cta{opacity:1;transform:none}
+#services .tile:focus-visible{outline:2px solid var(--red-lit);outline-offset:4px}
+
+/* controls */
+.carousel-controls{display:flex;align-items:center;gap:22px;margin-top:6px}
+.carousel-controls>button{width:46px;height:46px;border-radius:50%;border:1px solid var(--line-2);color:var(--text);
+  background:var(--panel);font-size:19px;cursor:pointer;transition:border-color .2s,background .2s}
+.carousel-controls>button:hover{border-color:var(--line-3);background:var(--panel-2)}
 .carousel-controls>button:disabled{opacity:.3;cursor:default}
-.carousel-dots{display:flex;gap:6px}.carousel-dots button{width:30px;height:30px;padding:0;background:transparent;border:0;cursor:pointer;position:relative}
-.carousel-dots button::after{content:'';display:block;width:7px;height:7px;border-radius:5px;background:var(--muted);margin:auto;transition:width .2s,background .2s}
-.carousel-dots button[aria-current="true"]::after{width:25px;background:var(--red-lit)}
-.carousel-hint{font-size:11px;color:var(--muted);letter-spacing:.08em;margin:12px 0 0}.landfoot{padding:0 22px;margin-top:26px}
+.carousel-dots{display:flex;gap:4px}
+.carousel-dots button{width:30px;height:30px;padding:0;background:transparent;border:0;cursor:pointer;position:relative}
+.carousel-dots button::after{content:'';display:block;width:7px;height:7px;border-radius:5px;background:var(--muted);margin:auto;transition:width .3s,background .3s}
+.carousel-dots button[aria-current="true"]::after{width:26px;background:var(--red-lit)}
+.carousel-hint{font-size:11px;color:var(--muted);letter-spacing:.08em;margin:12px 0 0}
+.landfoot{padding:0 22px;margin-top:22px}
+
+@media(prefers-reduced-motion:reduce){
+  #services .tile,#services .tile::after,#services .tile .cta,.carousel-dots button::after{transition:none!important}
+}
+
+/* ---------- Astra's mobile fixes for the booking form — keep ---------- */
 .stepper{min-width:0}.stepper .row{gap:6px}.pm{flex-shrink:0}
-@media(max-width:460px){.tile{min-height:220px;padding:26px}.tile .t{font-size:52px}.tens{grid-template-columns:1fr}.go{padding:15px 18px;font-size:12px}.done .code{font-size:46px}.kv span{overflow-wrap:anywhere}.urgent{gap:8px;padding:12px}.urgent .p{padding-left:0}}
-@media(prefers-reduced-motion:reduce){.carousel-dots button::after{transition:none}}
+@media(max-width:460px){.tens{grid-template-columns:1fr}.go{padding:15px 18px;font-size:12px}.done .code{font-size:46px}.kv span{overflow-wrap:anywhere}.urgent{gap:8px;padding:12px}.urgent .p{padding-left:0}}

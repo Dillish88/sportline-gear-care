@@ -49,7 +49,7 @@ await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));const base='htt
 const browser=await chromium.launch({headless:true,channel:'msedge'});
 try{
  const customer=await browser.newPage({viewport:{width:390,height:844}}),staff=await browser.newPage();const errors=[];for(const p of [customer,staff])p.on('pageerror',e=>errors.push(e.message));
- await customer.goto(base+'/book/');await customer.evaluate(()=>document.fonts.ready);await customer.screenshot({path:path.resolve('../archive-review/approved-carousel-mobile.png'),fullPage:true});
+ await customer.goto(base+'/book/');await customer.evaluate(()=>document.fonts.ready);await customer.locator('#services').evaluate(async el=>{await Promise.all(el.getAnimations({subtree:true}).map(a=>a.finished.catch(()=>{})));});await customer.screenshot({path:path.resolve('../archive-review/approved-carousel-mobile.png'),fullPage:true});
  await customer.getByRole('button',{name:'Next service',exact:true}).click();await customer.waitForFunction(()=>document.querySelector('[data-slide="1"]').getAttribute('aria-current')==='true');
  await customer.locator('[data-slide="0"]').click();await customer.locator('[data-go="badminton"]').click();await customer.locator('#days input').first().waitFor();await customer.locator('#days input').nth(1).check();await customer.locator('#slots input:not([disabled])').first().check();
  await customer.locator('#nm').fill('Pilot Test Customer');await customer.locator('#ph').fill('9876543210');await customer.locator('#rk').fill('Yonex Test');

@@ -63,7 +63,7 @@ $("again").onclick=function(){location.href=location.pathname+(SRC?"?src="+encod
 /* ---------------- catalogue ---------------- */
 function loadCatalogue(){
   return rpc("pilot_public_catalogue").then(function(list){
-    CAT=list||[]; BRANDS={}; CRI=[];
+    CAT=(list||[]).filter(function(c){return c.sport!=='badminton'||(c.active!==false&&c.price!=null)}); BRANDS={}; CRI=[];
     CAT.forEach(function(c){
       if(c.sport==="badminton"){var b=c.key.split("|")[0];(BRANDS[b]=BRANDS[b]||[]).push(c);}
       else if(c.sport==="cricket") CRI.push(c);
@@ -78,15 +78,22 @@ function chip(name,value,label,checked,type){
 }
 function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
 function buildBrands(){
-  var names=Object.keys(BRANDS); if(!names.length) return;
+  var primary=["Yonex","Cozmio","Li-Ning","Victor"];
+  var names=primary.filter(function(b){return !!BRANDS[b]});
+  var other=Object.keys(BRANDS).filter(function(b){return primary.indexOf(b)<0});
+  if(other.length) names.push("Other");
+  if(!names.length) return;
   brand=names[0];
   $("brands").innerHTML=names.map(function(b,i){return chip("brand",b,esc(b),i===0)}).join("");
   buildStrings();
 }
 function buildStrings(){
-  var list=BRANDS[brand]||[];
+  var primary=["Yonex","Cozmio","Li-Ning","Victor"];
+  var list=brand==="Other"
+    ?Object.keys(BRANDS).filter(function(b){return primary.indexOf(b)<0}).reduce(function(all,b){return all.concat(BRANDS[b])},[])
+    :(BRANDS[brand]||[]);
   $("str").innerHTML=list.map(function(c,i){
-    return '<option value="'+esc(c.key)+'">'+esc(c.name)+' — '+R(c.price)+'</option>'}).join("");
+    return '<option value="'+esc(c.key)+'">'+esc(c.name)+(c.price==null?' — rate to confirm':' — '+R(c.price))+'</option>'}).join("");
   buildColours();
 }
 function curString(){var k=$("str").value;return CAT.filter(function(c){return c.key===k})[0]}
@@ -305,8 +312,8 @@ $("gApply").onclick=function(){
   if(!gRec) advise();
   T.mains=gRec.t; T.crosses=gRec.c;
   $("mainsOut").innerHTML=T.mains+"<small>lbs</small>"; $("crossesOut").innerHTML=T.crosses+"<small>lbs</small>";
-  if(gRec.s){ var b=gRec.s.key.split("|")[0], bi=document.querySelector('input[name="brand"][value="'+b+'"]');
-    if(bi&&!bi.checked){bi.checked=true;brand=b;buildStrings();} $("str").value=gRec.s.key; buildColours(); }
+  if(gRec.s){ var b=gRec.s.key.split("|")[0], primary=["Yonex","Cozmio","Li-Ning","Victor"], shown=primary.indexOf(b)<0?"Other":b, bi=document.querySelector('input[name="brand"][value="'+shown+'"]');
+    if(bi&&!bi.checked){bi.checked=true;brand=shown;buildStrings();} $("str").value=gRec.s.key; buildColours(); }
   stepperState(); render();
   $("gApply").textContent="Applied — "+T.mains+" / "+T.crosses+" lbs";
 };
@@ -446,7 +453,7 @@ loadCatalogue().then(function(){
 window.SportlineBooking={catalogue:()=>CAT.filter(c=>c.sport==='badminton'&&c.price!=null&&c.active!==false),apply:function(key,mains,crosses){
  var s=byKey(key);if(!s||s.sport!=='badminton'||s.price==null)return false;
  if(SPORT!=='badminton'||$('flow').hidden)go('badminton');
- buildBrands();brand=key.split('|')[0];var bi=document.querySelector('input[name="brand"][value="'+brand+'"]');if(bi)bi.checked=true;buildStrings();$('str').value=key;buildColours();
+ buildBrands();var actualBrand=key.split('|')[0],primary=['Yonex','Cozmio','Li-Ning','Victor'];brand=primary.indexOf(actualBrand)<0?'Other':actualBrand;var bi=document.querySelector('input[name="brand"][value="'+brand+'"]');if(bi)bi.checked=true;buildStrings();$('str').value=key;buildColours();
  if(Number.isInteger(mains)&&Number.isInteger(crosses)&&mains>=18&&crosses<=35){T.mains=mains;T.crosses=crosses;}
  $('mainsOut').innerHTML=T.mains+'<small>lbs</small>';$('crossesOut').innerHTML=T.crosses+'<small>lbs</small>';stepperState();
  assistantApplied=true;var know=document.querySelector('input[name="setup"][value="know"]');if(know)know.checked=true;$('helpBlk').hidden=true;$('knowBlk').hidden=false;render();return true;

@@ -13,17 +13,14 @@ insert into public.pilot_catalogue(key,sport,name,price,colours,active) values
 ('Apacs|Cross Court 66','badminton','Apacs Cross Court 66',500,'["Maroon","Red","White"]'::jsonb,true)
 on conflict(key) do update set
  name=excluded.name, price=excluded.price, colours=excluded.colours, active=excluded.active;
--- Await Shankar's approved prices. These cannot be booked until activated.
-insert into public.pilot_catalogue(key,sport,name,price,colours,active)
-select brand||'|'||model,'badminton',brand||' '||model,null,'["Confirm at counter"]'::jsonb,false
-from (values ('Li-Ning','AP64 Rainbow'),('Li-Ning','AP70 Turbo'),('Cozmio','CZ 600'),
-('Cozmio','CZ Power 700'),('Apacs','Cross Court 66'),('Max Bolt','66'),('Mas Pro','BS-1000'),
-('Transform','TS-One'),('Kumpoo','K65'),('Gosen','G-Pro 70'),('Hundred','JP63 Hunter')) s(brand,model)
-on conflict(key) do nothing;
+-- Retire discontinued, unpriced stock from any existing installation.
+update public.pilot_catalogue set active=false
+where key in ('Li-Ning|AP64 Rainbow','Li-Ning|AP70 Turbo','Cozmio|CZ 600','Cozmio|CZ Power 700',
+ 'Mas Pro|BS-1000','Transform|TS-One','Kumpoo|K65','Gosen|G-Pro 70','Hundred|JP63 Hunter');
 
 create or replace function public.pilot_public_catalogue() returns jsonb
 language sql stable security definer set search_path='' as $$
- select coalesce(jsonb_agg(jsonb_build_object('key',key,'sport',sport,'name',name,'price',price,'colours',colours)
+ select coalesce(jsonb_agg(jsonb_build_object('key',key,'sport',sport,'name',name,'price',price,'colours',colours,'active',active)
  order by case when key='Yonex|BG65' then 0 else 1 end,key),'[]'::jsonb)
  from public.pilot_catalogue where active and (sport='cricket' or (sport='badminton' and price is not null and jsonb_array_length(colours)>0));
 $$;

@@ -79,10 +79,7 @@ function chip(name,value,label,checked,type){
 function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
 function buildBrands(){
   var primary=["Yonex","Cozmio","Li-Ning","Victor"];
-  var names=primary.filter(function(b){return !!BRANDS[b]});
-  var other=Object.keys(BRANDS).filter(function(b){return primary.indexOf(b)<0});
-  if(other.length) names.push("Other");
-  if(!names.length) return;
+  var names=primary.concat(["Other"]);
   brand=names[0];
   $("brands").innerHTML=names.map(function(b,i){return chip("brand",b,esc(b),i===0)}).join("");
   buildStrings();

@@ -4,6 +4,7 @@ import worker from '../worker/index.js';
 const env = {
   SUPABASE_URL: 'https://db.example.test',
   SUPABASE_ANON_KEY: 'publishable-test-key',
+  SUPABASE_SERVICE_ROLE_KEY: 'service-role-test-key',
   ASSETS: { fetch: async request => new Response(`asset:${new URL(request.url).pathname}`) },
 };
 const calls = [];
@@ -31,13 +32,20 @@ assert.equal(response.status, 200);
 assert.equal(new Headers(calls.at(-1).init.headers).get('authorization'), 'Bearer staff-test-token');
 
 response = await worker.fetch(request('/api/orders', {
-  body: { request: { name: 'Test Customer' }, key: '77bc162a-3131-4bcc-9b1c-0c5bc4459af5' },
+  body: { request: { website: '', name: 'Test Customer', phone: '9876543210', sport: 'shoe', shop: '6th', payment: 'UPI', src: '', marketing_opt_in: false, advance: '0', gear: '', note: 'Sole repair' }, key: '77bc162a-3131-4bcc-9b1c-0c5bc4459af5' },
 }), env);
 assert.equal(response.status, 200);
 assert.equal(calls.at(-1).url, 'https://db.example.test/rest/v1/rpc/pilot_create_booking_v2');
+assert.equal(new Headers(calls.at(-1).init.headers).get('apikey'), env.SUPABASE_SERVICE_ROLE_KEY);
+assert.equal(new Headers(calls.at(-1).init.headers).get('authorization'), 'Bearer ' + env.SUPABASE_SERVICE_ROLE_KEY);
 assert.deepEqual(JSON.parse(calls.at(-1).init.body), {
-  p_request: { name: 'Test Customer' }, p_key: '77bc162a-3131-4bcc-9b1c-0c5bc4459af5',
+  p_request: { name: 'Test Customer', phone: '9876543210', sport: 'shoe', shop: '6th', payment: 'UPI', src: '', marketing_opt_in: false, advance: '0', gear: '', note: 'Sole repair' }, p_key: '77bc162a-3131-4bcc-9b1c-0c5bc4459af5',
 });
+
+response = await worker.fetch(request('/api/orders', {
+  body: { request: { website: 'spam.example', name: 'Test Customer', phone: '9876543210', sport: 'shoe', shop: '6th', payment: 'UPI', src: '', marketing_opt_in: false, advance: '0', gear: '', note: 'Sole repair' }, key: '77bc162a-3131-4bcc-9b1c-0c5bc4459af5' },
+}), env);
+assert.equal(response.status, 400);
 
 response = await worker.fetch(request('/api/rpc/not_allowed', { body: {} }), env);
 assert.equal(response.status, 403);

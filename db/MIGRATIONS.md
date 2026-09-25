@@ -23,6 +23,12 @@ Before any future change, inspect the live definitions of affected functions and
 
 Validation: tests/pilot-loyalty.mjs and tests/book-browser.mjs use local PostgreSQL via PGlite, not production customers. Real-device and RP326 checks remain with the shop.
 
+## Test project only — 25 September 2026
+
+20260925_phase1_worker_booking_privileges.sql restricts pilot_create_booking_v2 to service_role and revokes direct API access to the v1 booking and tracking wrappers. 20260925_phase1_lock_legacy_wrappers.sql also revokes the v1 wrappers from service_role, which the test project's default grants had allowed. Apply these on sportline-test only. The Phase 1 Worker must have the test project's SUPABASE_SERVICE_ROLE_KEY configured as an encrypted Preview Secret before booking requests can succeed.
+
+The older pilot/app.js and pilot/track.js files still reference v1. The Phase 1 Cloudflare build excludes those assets and redirects /pilot routes to /book; the Vercel rules still leave /pilot/track.html as a legacy path. Before applying this migration to the live project, retire or update that legacy tracker and verify no other deployed caller depends on the v1 functions. Do not apply this migration to production as part of Phase 1 testing.
+
 ## Open policy
 
 Repair details are anonymised after 12 months following collection/cancellation. Loyalty wallets and their phone-keyed ledger are separate and currently retained. The owner must decide credit expiry and corresponding phone retention; do not silently delete or forfeit outstanding credit. Public wallet display requires verified phone ownership before it can be enabled.

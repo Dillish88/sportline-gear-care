@@ -35,8 +35,13 @@ function authHeaders(env, token) {
   return headers;
 }
 
-async function upstream(request, env, path, body, token) {
-  const headers = authHeaders(env, token);
+function serviceRoleHeaders(env) {
+  const key = env.SUPABASE_SERVICE_ROLE_KEY;
+  return new Headers({ apikey: key, Authorization: `Bearer ${key}` });
+}
+
+async function upstream(request, env, path, body, token, useServiceRole = false) {
+  const headers = useServiceRole ? serviceRoleHeaders(env) : authHeaders(env, token);
   const init = { method: request.method, headers, redirect: 'manual' };
   if (body !== undefined) {
     headers.set('Content-Type', 'application/json');
@@ -53,6 +58,41 @@ async function upstream(request, env, path, body, token) {
     'Content-Type': response.headers.get('Content-Type') || 'application/json; charset=utf-8',
   });
   return new Response(response.body, { status: response.status, headers: outHeaders });
+}
+
+function validBookingRequest(request) {
+  if (!request || typeof request !== 'object' || Array.isArray(request)) return false;
+  const allowed = new Set([
+    'website', 'name', 'phone', 'sport', 'shop', 'payment', 'src', 'marketing_opt_in', 'advance',
+    'gear', 'string_key', 'colour', 'colour_other', 'mains', 'crosses', 'knots', 'pre_stretch',
+    'urgent', 'slot_date', 'slot_start', 'jobs', 'help_choose', 'note',
+  ]);
+  if (Object.keys(request).some(key => !allowed.has(key))) return false;
+  if (typeof request.website !== 'string') return false;
+  if (typeof request.name !== 'string' || request.name.trim().length < 1 || request.name.trim().length > 80) return false;
+  if (typeof request.phone !== 'string') return false;
+  const phone = request.phone.replace(/\D/g, '');
+  const normalizedPhone = phone.length === 12 && phone.startsWith('91') ? phone.slice(2) : phone;
+  if (!/^[6-9][0-9]{9}$/.test(normalizedPhone)) return false;
+  if (!['badminton', 'cricket', 'shoe'].includes(request.sport)) return false;
+  if (!['6th', '5th'].includes(request.shop) || !['UPI', 'Cash', 'Card'].includes(request.payment)) return false;
+  if (typeof request.marketing_opt_in !== 'boolean' || !/^(0|[1-9][0-9]{0,6})$/.test(String(request.advance ?? ''))) return false;
+  if (typeof request.src !== 'string' || request.src.length > 100) return false;
+  if (typeof request.gear !== 'string' || request.gear.length > 120) return false;
+  if (typeof request.note !== 'string' || request.note.length > 600) return false;
+
+  if (request.sport === 'badminton') {
+    if (request.gear.trim().length < 2 || typeof request.string_key !== 'string' || !request.string_key) return false;
+    if (typeof request.colour !== 'string' || request.colour.length > 40) return false;
+    if (request.colour === 'Other' && (typeof request.colour_other !== 'string' || request.colour_other.trim().length < 2 || request.colour_other.length > 40)) return false;
+    if (!['2', '4'].includes(String(request.knots)) || !/^(1[8-9]|2[0-9]|3[0-5])$/.test(String(request.mains)) || !/^(1[8-9]|2[0-9]|3[0-5])$/.test(String(request.crosses))) return false;
+    if (typeof request.pre_stretch !== 'boolean' || typeof request.urgent !== 'boolean') return false;
+    if (!request.urgent && (!/^\d{4}-\d{2}-\d{2}$/.test(String(request.slot_date)) || !/^\d{2}:\d{2}$/.test(String(request.slot_start)))) return false;
+  } else if (request.sport === 'cricket') {
+    if (!Array.isArray(request.jobs) || request.jobs.length < 1 || request.jobs.length > 9 || request.jobs.some(job => typeof job !== 'string' || !job || job.length > 80)) return false;
+  } else if (request.note.trim().length < 3) return false;
+
+  return new TextEncoder().encode(JSON.stringify(request)).byteLength <= 8000;
 }
 
 async function api(request, env, path) {
@@ -83,9 +123,14 @@ async function api(request, env, path) {
         typeof body.key !== 'string' || !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(body.key)) {
       return json({ message: 'Booking details are incomplete.' }, 400);
     }
+    if (typeof body.request.website !== 'string') return json({ message: 'Check the booking details and try again.' }, 400);
+    if (body.request.website.trim()) return json({ message: 'Booking request could not be completed.' }, 400);
+    if (!validBookingRequest(body.request)) return json({ message: 'Check the booking details and try again.' }, 400);
+    if (!env.SUPABASE_SERVICE_ROLE_KEY) return json({ message: 'The booking service is not configured.' }, 503);
+    const { website, ...booking } = body.request;
     return upstream(request, env, '/rest/v1/rpc/pilot_create_booking_v2', {
-      p_request: body.request, p_key: body.key,
-    });
+      p_request: booking, p_key: body.key,
+    }, undefined, true);
   }
 
   if (path === '/api/auth/token') {

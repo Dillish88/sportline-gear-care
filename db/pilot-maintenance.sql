@@ -3,6 +3,16 @@ begin;
 insert into public.pilot_catalogue(key,sport,name,price,colours) values
 ('Yonex|Exbolt 68','badminton','Yonex Exbolt 68',1100,'["Confirm at counter"]')
 on conflict(key) do nothing;
+
+-- Newly reported stock and prices supplied by the shop.
+insert into public.pilot_catalogue(key,sport,name,price,colours,active) values
+('Max Bolt|63','badminton','Max Bolt 63',500,'["Violet","Mint Green","Orange","Bright Pink","Light Blue","Black","Blue","Maroon","Half White"]'::jsonb,true),
+('Max Bolt|66','badminton','Max Bolt 66',600,'["Violet"]'::jsonb,true),
+('Max Bolt|70','badminton','Max Bolt 70',550,'["White","Violet","Blue","Red"]'::jsonb,true),
+('Gonkee|GK-65','badminton','Gonkee GK-65',500,'["Red"]'::jsonb,true),
+('Apacs|Cross Court 66','badminton','Apacs Cross Court 66',500,'["Maroon","Red","White"]'::jsonb,true)
+on conflict(key) do update set
+ name=excluded.name, price=excluded.price, colours=excluded.colours, active=excluded.active;
 -- Await Shankar's approved prices. These cannot be booked until activated.
 insert into public.pilot_catalogue(key,sport,name,price,colours,active)
 select brand||'|'||model,'badminton',brand||' '||model,null,'["Confirm at counter"]'::jsonb,false

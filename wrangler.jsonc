@@ -11,5 +11,10 @@
   },
   "triggers": {
     "crons": ["30 4 * * *"]
+  },
+  "previews": {
+    "vars": {
+      "SUPABASE_URL": "https://swlsbvrqlnvbvamainql.supabase.co"
+    }
   }
 }

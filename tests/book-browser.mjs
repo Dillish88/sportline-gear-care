@@ -14,7 +14,7 @@ const server=http.createServer(async(req,res)=>{
  const json=(status,data)=>{res.writeHead(status,{'Content-Type':'application/json'});res.end(JSON.stringify(data));};
  try{
   if(req.method==='POST'){
-   let raw='';for await(const chunk of req)raw+=chunk;const body=JSON.parse(raw||'{}');
+   let raw='';for await(const chunk of req)raw+=chunk;let body=JSON.parse(raw||'{}');
    if(url.pathname==='/api/auth/token'){
     if(body.email==='staff@example.test'&&body.password==='test-password')return json(200,{access_token:'test-staff',refresh_token:'test-refresh',expires_in:3600});
     return json(400,{error_code:'invalid_credentials'});

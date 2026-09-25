@@ -1,11 +1,10 @@
 window.PilotAPI = {
   async request(path, body, token) {
-    const c = window.PILOT_CONFIG;
-    if (!c?.enabled) throw new Error('Pilot setup is not active yet. Please ask the counter team.');
     let response;
     try {
-      response = await fetch(c.url + path, {
-        method: 'POST', headers: {apikey: c.key, 'Content-Type': 'application/json', ...(token ? {Authorization:'Bearer '+token} : {})},
+      if (!/^\/api\/[a-z0-9_/?=&-]+$/i.test(path)) throw new Error('Unsupported pilot API request.');
+      response = await fetch(path, {
+        method: 'POST', headers: {'Content-Type': 'application/json', ...(token ? {Authorization:'Bearer '+token} : {})},
         body: JSON.stringify(body), signal: AbortSignal.timeout(20000)
       });
     } catch { throw new Error('The connection was interrupted. Please try again.'); }
@@ -19,5 +18,5 @@ window.PilotAPI = {
     }
     return data;
   },
-  rpc(name, body = {}, token) { return this.request('/rest/v1/rpc/' + name, body, token); }
+  rpc(name, body = {}, token) { return this.request('/api/rpc/' + encodeURIComponent(name), body, token); }
 };

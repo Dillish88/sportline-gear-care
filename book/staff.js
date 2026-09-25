@@ -1,8 +1,6 @@
 
 (function(){
 "use strict";
-var CFG={url:"https://swlsbvrqlnvbvamainql.supabase.co",key:"sb_publishable_hFuKjzCTep2eNNO9d6trBg_kXIDy1OL"};
-if(window.PILOT_CONFIG){CFG.url=PILOT_CONFIG.url;CFG.key=PILOT_CONFIG.key;}
 var $=function(i){return document.getElementById(i)};
 var R=function(n){return "₹"+Number(n||0).toLocaleString("en-IN")};
 function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
@@ -11,14 +9,14 @@ var ACTIVE=["Requested","Accepted","At the bench","Ready"];
 var SESS=null, JOBS=[], VIEW="active", OPEN=null, SEEN=null, URGENT_LEFT=null, audio=null, timer=null;
 
 /* ---------------- auth (email + password, same as the pilot) ---------------- */
-var KEY="sportline-staff-session", BUSY=false, LOADING=false, EPOCH=0;
+var KEY="sportline-staff-session", BUSY=false, LOADING=false, EPOCH=0, SIGNING=false;
 function editing(){return !!document.querySelector('[id^="payBox-"]:not([hidden])')||!!document.querySelector('[id^="price-"][data-dirty]');}
 var refreshing=null;
 function saveSess(s){ SESS=s; try{ s?localStorage.setItem(KEY,JSON.stringify(s)):localStorage.removeItem(KEY);}catch(e){} }
 function loadSess(){ try{ return JSON.parse(localStorage.getItem(KEY)); }catch(e){ return null; } }
 function authCall(grant,body){
-  return fetch(CFG.url+"/auth/v1/token?grant_type="+grant,{method:"POST",signal:AbortSignal.timeout(20000),
-    headers:{"apikey":CFG.key,"Content-Type":"application/json"},body:JSON.stringify(body)})
+  return fetch("/api/auth/token?grant_type="+encodeURIComponent(grant),{method:"POST",signal:AbortSignal.timeout(20000),
+    headers:{"Content-Type":"application/json"},body:JSON.stringify(body)})
   .then(function(r){return r.json().then(function(j){
     if(!r.ok) throw new Error(j.error_description||j.msg||j.message||"Sign-in failed.");
     return {access_token:j.access_token,refresh_token:j.refresh_token,
@@ -35,11 +33,11 @@ function fresh(){
     .catch(function(e){ signOut(); throw new Error("Your session ended. Please sign in again."); }).finally(function(){refreshing=null;});
   return refreshing;
 }
-/* signed-in calls: publishable key on apikey, the staff member's own token on Authorization */
+/* Staff calls go through the same-origin API with the staff member's own token. */
 function rpc(fn,body){
   return fresh().then(function(s){
-    return fetch(CFG.url+"/rest/v1/rpc/"+fn,{method:"POST",signal:AbortSignal.timeout(20000),
-      headers:{"apikey":CFG.key,"Authorization":"Bearer "+s.access_token,"Content-Type":"application/json"},
+    return fetch("/api/rpc/"+encodeURIComponent(fn),{method:"POST",signal:AbortSignal.timeout(20000),
+      headers:{"Authorization":"Bearer "+s.access_token,"Content-Type":"application/json"},
       body:JSON.stringify(body||{})});
   }).then(function(r){return r.text().then(function(t){
     var j=null; try{j=t?JSON.parse(t):null}catch(e){}
@@ -49,18 +47,19 @@ function rpc(fn,body){
 function signOut(){
   EPOCH++;OPEN=null;SEEN=null;$("jobs").replaceChildren();$("slip").replaceChildren();$("password").value="";
   if(timer){clearInterval(timer);timer=null;}
-  if(SESS){ fetch(CFG.url+"/auth/v1/logout",{method:"POST",signal:AbortSignal.timeout(20000),headers:{"apikey":CFG.key,"Authorization":"Bearer "+SESS.access_token}}).catch(function(){}); }
+  if(SESS){ fetch("/api/auth/logout",{method:"POST",signal:AbortSignal.timeout(20000),headers:{"Authorization":"Bearer "+SESS.access_token}}).catch(function(){}); }
   saveSess(null); JOBS=[]; $("board").hidden=true; $("login").hidden=false; $("signout").hidden=true; $("who").textContent="";
 }
 $("signout").onclick=signOut;
 $("login").onsubmit=function(e){
   e.preventDefault(); hideMsg();
-  var b=$("signin"); b.disabled=true; b.textContent="Signing in…";
+  if(SIGNING){showErr("Sign in is still in progress. Please wait for the result.");return;}
+  var b=$("signin"); SIGNING=true; b.textContent="Signing in…";
   unlockAudio();
   authCall("password",{email:$("email").value.trim(),password:$("password").value})
   .then(function(s){ saveSess(s); return enter(); })
   .catch(function(er){ showErr(er.message); })
-  .then(function(){ b.disabled=false; b.textContent="Sign in"; });
+  .then(function(){ SIGNING=false; b.textContent="Sign in"; });
 };
 function enter(){
   return rpc("pilot_is_staff").then(function(ok){
@@ -247,7 +246,7 @@ function actions(j){
   var btns=[],more=[];
   if(st==="Accepted") btns.push('<button class="btn chrome" type="button" data-act="start" data-id="'+j.id+'">Start work</button>');
   if(st==="At the bench") btns.push('<button class="btn chrome" type="button" data-act="ready" data-id="'+j.id+'">Mark ready</button>');
-  if(st==="Ready"&&j.paid) btns.push('<button class="btn red" type="button" data-act="collect" data-id="'+j.id+'"'+(j.paid?"":" disabled title=\"Take the balance first\"")+'>Handed over</button>');
+  if(st==="Ready") btns.push('<button class="btn red" type="button" data-act="collect" data-id="'+j.id+'">Handed over</button>');
   if(open && !j.paid && st!=="Requested") btns.push('<button class="btn" type="button" data-pay="'+j.id+'">Take payment</button>');
   if(st==="Requested"&&!j.needs_quote) btns.push('<button class="btn" type="button" data-pay="'+j.id+'">Take advance</button>');
   if(st==="Ready") more.push('<a class="btn" target="_blank" rel="noopener" href="'+readyWA(j)+'">WhatsApp: ready</a>');
@@ -288,29 +287,32 @@ function wire(){
     b.onclick=function(){ printSlip(byId(b.getAttribute("data-slip"))); };
   });
   Array.prototype.forEach.call(document.querySelectorAll("[data-offers]"),function(b){
-    b.onclick=function(){ var j=byId(b.getAttribute("data-offers"));if(!confirm("Has this customer confirmed they want offers for 12 months?"))return;b.disabled=true;
+    b.onclick=function(){ var j=byId(b.getAttribute("data-offers")),label=b.textContent;if(b.dataset.saving==="true"){showErr("The offer update is still saving. Please wait.");return;}if(!confirm("Has this customer confirmed they want offers for 12 months?"))return;b.dataset.saving="true";b.textContent="Saving…";
       rpc("pilot_marketing_consent",{p_order:j.id,p_opt_in:true})
       .then(function(){ return rpc("pilot_loyalty_welcome",{p_phone:j.phone}); })
-      .then(function(w){ b.textContent="Offers confirmed";
+      .then(function(w){ b.dataset.saving="false";b.textContent="Offers confirmed";
         showOk(j.customer_name+" added to the offers list for 12 months."+(w&&w.awarded?" ₹20 welcome credit added.":"")); return load(false); })
-      .catch(function(e){ b.disabled=false; showErr(e.message); }); };
+      .catch(function(e){ b.dataset.saving="false";b.textContent=label;showErr(e.message); }); };
   });
 }
 
 /* ---------------- actions ---------------- */
 var VERB={accept:"Accepted",start:"On the bench",ready:"Marked ready",collect:"Handed over",cancel:"Cancelled"};
 function act(j,action,btn){
-  if(!j||BUSY) return; hideMsg();
+  if(!j){showErr("Choose a job before updating it.");return;}
+  if(BUSY){showErr("Another update is still saving. Please wait.");return;} hideMsg();
+  var label=btn.textContent;
   var amount=null;
   if(action==="accept"){
     var v=$("price-"+j.id).value; amount=v===""?null:Number(v);
     if(amount==null||!Number.isInteger(amount)||amount<0||amount>100000){ showErr("Enter the agreed price before accepting."); return; }
   }
+  if(action==="collect"&&!j.paid){showErr("Take the remaining payment before handing over this job.");return;}
   if(action==="cancel"&&!confirm("Cancel "+j.code+" for "+j.customer_name+"?")) return;
-  BUSY=true;btn.disabled=true;
+  BUSY=true;btn.textContent="Saving…";
   rpc("pilot_update_order",{p_id:j.id,p_expected:j.status,p_action:action,p_amount:amount})
   .then(function(){ BUSY=false;document.querySelectorAll("[data-dirty]").forEach(x=>delete x.dataset.dirty);showOk(j.code+" — "+VERB[action]+"."); if(action==="collect"||action==="cancel") OPEN=null; return load(false); })
-  .catch(function(e){ BUSY=false;showErr(e.message); btn.disabled=false; if(/changed/i.test(e.message)) load(false); });
+  .catch(function(e){ BUSY=false;btn.textContent=label;showErr(e.message); if(/changed/i.test(e.message)) load(false); });
 }
 function payForm(j){
   var box=$("payBox-"+j.id); if(!box) return;
@@ -327,7 +329,7 @@ function payForm(j){
     +'<span class="small" style="width:100%">Balance before this: '+R(bal)+'. The job marks itself paid when the balance reaches zero.</span></div>';
   box.hidden=false;
   $("payGo-"+j.id).onclick=function(){
-    if(BUSY)return;
+    if(BUSY){showErr("Another update is still saving. Please wait.");return;}
     var amt=Number($("amt-"+j.id).value), m=(document.querySelector('input[name="pm-'+j.id+'"]:checked')||{}).value;
     if(!Number.isInteger(amt)||amt<=0){ showErr("Enter the amount received."); return; }
     if(amt>bal){showErr("Amount exceeds the balance.");return;}
@@ -335,14 +337,14 @@ function payForm(j){
     if(!confirm("Record "+R(amt)+" "+(m==="Credit"?"in Sportline credit":"received by "+m)+" for "+j.code+"?"))return;
     var kind=(j.status==="Requested"||(j.status==="Accepted"&&!(j.paid_total>0)))?"advance":(amt>=bal?"balance":"part");
     var fingerprint=[j.id,amt,m,kind].join("|"),key;try{key=sessionStorage.getItem("payment:"+fingerprint);}catch(e){}if(!key)key=crypto.randomUUID();try{sessionStorage.setItem("payment:"+fingerprint,key);}catch(e){}
-    BUSY=true;this.disabled=true;
+    BUSY=true;this.textContent="Saving…";
     var call=m==="Credit"
       ? rpc("pilot_loyalty_redeem_v2",{p_order:j.id,p_amount:amt,p_kind:kind,p_key:key})
       : rpc("pilot_record_payment_v3",{p_order:j.id,p_amount:amt,p_method:m,p_kind:kind,p_key:key});
     call
     .then(function(r){BUSY=false;box.hidden=true;try{sessionStorage.removeItem("payment:"+fingerprint);}catch(e){}
       showOk(R(amt)+" "+(m==="Credit"?"credit":m)+" recorded for "+j.code+". Balance "+R(r.balance)+(r.paid?" — fully paid.":".")); return load(false); })
-    .catch(function(e){BUSY=false;showErr(e.message);var b=$("payGo-"+j.id);if(b)b.disabled=false;});
+    .catch(function(e){BUSY=false;showErr(e.message);var b=$("payGo-"+j.id);if(b)b.textContent="Record";});
   };
 }
 

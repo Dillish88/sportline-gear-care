@@ -1,0 +1,15 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "sportline-gear-care-phase1",
+  "main": "./worker/index.js",
+  "compatibility_date": "2026-09-25",
+  "assets": {
+    "directory": "./cloudflare-dist",
+    "binding": "ASSETS",
+    "not_found_handling": "404-page",
+    "run_worker_first": ["/api/*", "/", "/index.html", "/pilot/*", "/concept*", "/gear-care.html", "/stringing.html"]
+  },
+  "triggers": {
+    "crons": ["30 4 * * *"]
+  }
+}

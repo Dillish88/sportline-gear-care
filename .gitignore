@@ -5,3 +5,5 @@ desktop.ini
 .idea/
 node_modules/
 *.tmp
+.wrangler/
+cloudflare-dist/

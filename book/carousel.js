@@ -53,8 +53,6 @@
       c.setAttribute("aria-hidden", pos === "hidden" ? "true" : "false");
     });
     dots.forEach(function (d, i) { d.setAttribute("aria-current", String(i === cur)); });
-    if (prev) prev.disabled = n < 2;
-    if (next) next.disabled = n < 2;
   }
   function goTo(i, focus) {
     cur = ((i % n) + n) % n; render();

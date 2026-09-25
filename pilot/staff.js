@@ -6,7 +6,7 @@
   async function accessToken(){
     if(!session) throw new Error('Sign in with an approved staff account.');
     if(Date.now()>session.expiresAt-60000){
-      const result=await PilotAPI.request('/auth/v1/token?grant_type=refresh_token',{refresh_token:session.refresh_token});
+      const result=await PilotAPI.request('/api/auth/token?grant_type=refresh_token',{refresh_token:session.refresh_token});
       session={...result,expiresAt:Date.now()+result.expires_in*1000};
     }
     return session.access_token;
@@ -15,13 +15,13 @@
   $('login').onsubmit=async e=>{
     e.preventDefault();$('signin').disabled=true;$('staff-error').hidden=true;
     try{
-      const result=await PilotAPI.request('/auth/v1/token?grant_type=password',{email:$('email').value.trim(),password:$('password').value});
+      const result=await PilotAPI.request('/api/auth/token?grant_type=password',{email:$('email').value.trim(),password:$('password').value});
       session={...result,expiresAt:Date.now()+result.expires_in*1000};$('password').value='';
       orders=await PilotAPI.rpc('pilot_queue',{},await accessToken());
       $('login').hidden=true;$('dashboard').hidden=false;$('logout').hidden=false;updated=new Date().toLocaleTimeString();render();
     }catch(e){reset();error(e);}finally{$('signin').disabled=false;}
   };
-  $('logout').onclick=async()=>{const token=session?.access_token;reset();if(token)try{await PilotAPI.request('/auth/v1/logout',{},token);}catch{}};
+  $('logout').onclick=async()=>{const token=session?.access_token;reset();if(token)try{await PilotAPI.request('/api/auth/logout',{},token);}catch{}};
   async function load(){
     if(loading||acting||!session)return;loading=true;$('reload').disabled=true;
     try{orders=await PilotAPI.rpc('pilot_queue',{},await accessToken());updated=new Date().toLocaleTimeString();$('staff-error').hidden=true;render();}

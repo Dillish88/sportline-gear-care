@@ -1,8 +1,6 @@
 
 (function(){
 "use strict";
-var CFG={url:"https://swlsbvrqlnvbvamainql.supabase.co",key:"sb_publishable_hFuKjzCTep2eNNO9d6trBg_kXIDy1OL"};
-if(window.PILOT_CONFIG){CFG.url=PILOT_CONFIG.url;CFG.key=PILOT_CONFIG.key;}
 var $=function(i){return document.getElementById(i)};
 var R=function(n){return "₹"+Number(n||0).toLocaleString("en-IN")};
 function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
@@ -21,8 +19,8 @@ var token=(location.hash.match(/(?:t=)?([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9
 function load(){
   if(!token){ $("app").innerHTML='<div class="msg">This link is incomplete. Use the full link from your booking message.</div>'; return; }
   function call(fn,body){
-    return fetch(CFG.url+"/rest/v1/rpc/"+fn,{method:"POST",signal:AbortSignal.timeout(20000),
-      headers:{"apikey":CFG.key,"Content-Type":"application/json"},body:JSON.stringify(body)})
+    return fetch("/api/rpc/"+encodeURIComponent(fn),{method:"POST",signal:AbortSignal.timeout(20000),
+      headers:{"Content-Type":"application/json"},body:JSON.stringify(body)})
     .then(function(r){if(!r.ok)throw new Error("Unable to load");return r.json()});
   }
   call("pilot_track_booking_v2",{p_token:token})

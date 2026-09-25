@@ -1,19 +1,17 @@
 
 (function(){
 "use strict";
-var CFG={url:"https://swlsbvrqlnvbvamainql.supabase.co",
-         key:"sb_publishable_hFuKjzCTep2eNNO9d6trBg_kXIDy1OL",
-         shopWA:"918056436668"};
-if(window.PILOT_CONFIG){CFG.url=PILOT_CONFIG.url;CFG.key=PILOT_CONFIG.key;}
+var CFG={shopWA:"918056436668"};
 var $=function(i){return document.getElementById(i)};
 var R=function(n){return "₹"+Number(n||0).toLocaleString("en-IN")};
 var qs=new URLSearchParams(location.search);
 var SRC=(qs.get("src")||"").replace(/[\u0000-\u001f\u007f]/g," ").trim().slice(0,100);
 
-/* publishable key goes on the apikey header only — never Authorization: Bearer */
 function rpc(fn,body){
-  return fetch(CFG.url+"/rest/v1/rpc/"+fn,{method:"POST",signal:AbortSignal.timeout(20000),
-    headers:{"apikey":CFG.key,"Content-Type":"application/json"},body:JSON.stringify(body||{})})
+  var path=fn==="pilot_create_booking_v2"?"/api/orders":"/api/rpc/"+encodeURIComponent(fn);
+  var payload=fn==="pilot_create_booking_v2"?{request:body.p_request,key:body.p_key}:body||{};
+  return fetch(path,{method:"POST",signal:AbortSignal.timeout(20000),
+    headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)})
   .then(function(r){return r.text().then(function(t){
     var j=null; try{j=t?JSON.parse(t):null}catch(e){}
     if(!r.ok) throw new Error((j&&(j.message||j.hint))||"Something went wrong. Please try again.");
@@ -271,15 +269,14 @@ document.addEventListener("change",function(e){
 });
 Array.prototype.forEach.call(document.querySelectorAll(".pm"),function(b){
   b.onclick=function(){
-    var k=b.getAttribute("data-t"); T[k]=Math.max(18,Math.min(35,T[k]+(+b.getAttribute("data-d"))));
+    var k=b.getAttribute("data-t"),next=T[k]+(+b.getAttribute("data-d"));
+    if(next<18||next>35){showErr("Tension must stay between 18 and 35 lbs.");return;}
+    hideErr(); T[k]=next;
     $(k+"Out").innerHTML=T[k]+"<small>lbs</small>"; stepperState();
   };
 });
 function stepperState(){
-  Array.prototype.forEach.call(document.querySelectorAll(".pm"),function(b){
-    var k=b.getAttribute("data-t"),d=+b.getAttribute("data-d");
-    b.disabled=(d<0&&T[k]<=18)||(d>0&&T[k]>=35);
-  });
+  // Keep both controls clickable; the handler explains when a limit is reached.
 }
 
 /* ---------------- tension adviser ----------------
@@ -360,27 +357,27 @@ function uuid(){ if(window.crypto&&crypto.randomUUID) return crypto.randomUUID()
 function showErr(m){$("err").textContent=m;$("err").hidden=false;$("err").scrollIntoView({behavior:"smooth",block:"center"})}
 function hideErr(){$("err").hidden=true}
 
+var SUBMITTING=false;
 $("submit").onclick=async function(){
-  if($("submit").disabled)return;
+  if(SUBMITTING){showErr("Your booking is still being saved. Please wait for the result.");return;}
   var p=problems();
   if(p.length){showErr("Still need "+p.join(", ")+".");return;}
   hideErr();
-  var btn=$("submit");btn.disabled=true;btn.textContent="Booking…";
+  var btn=$("submit");SUBMITTING=true;btn.textContent="Booking…";
   try{
   var body=payload(), json=JSON.stringify(body);
   var hash=Array.from(new Uint8Array(await crypto.subtle.digest("SHA-256",new TextEncoder().encode(json))),x=>x.toString(16).padStart(2,"0")).join("");
   /* same request after a lost response reuses its key, so it can never create a second job */
   if(!pending||pending.hash!==hash) pending={hash:hash,key:uuid()};
   try{sessionStorage.setItem("sportline-book-pending",JSON.stringify(pending));}catch(e){}
-  var btn=$("submit"); btn.disabled=true; btn.textContent="Booking…";
   await rpc("pilot_create_booking_v2",{p_request:body,p_key:pending.key})
   .then(function(r){ confirmed(r,body); })
   .catch(function(e){
     showErr(e.message);
     if(/time|full|taken|urgent/i.test(e.message)&&SPORT==="badminton"){slotSel=null;$("urgent").checked=false;loadDays();}
   })
-  .then(function(){btn.disabled=false;btn.textContent="Request booking";});
-  }catch(e){showErr(e.message);}finally{btn.disabled=false;btn.textContent="Request booking";}
+  .then(function(){btn.textContent="Request booking";});
+  }catch(e){showErr(e.message);}finally{SUBMITTING=false;btn.textContent="Request booking";}
 };
 
 /* ---------------- confirmation ---------------- */

@@ -13,16 +13,17 @@ const server=http.createServer(async(req,res)=>{
  const url=new URL(req.url,'http://localhost');
  const json=(status,data)=>{res.writeHead(status,{'Content-Type':'application/json'});res.end(JSON.stringify(data));};
  try{
-  if(url.pathname==='/pilot/config.js'){res.setHeader('Content-Type','text/javascript');res.end(`window.PILOT_CONFIG={enabled:true,key:'test-only',url:'http://127.0.0.1:${server.address().port}'};`);return;}
   if(req.method==='POST'){
    let raw='';for await(const chunk of req)raw+=chunk;const body=JSON.parse(raw||'{}');
-   if(url.pathname==='/auth/v1/token'){
+   if(url.pathname==='/api/auth/token'){
     if(body.email==='staff@example.test'&&body.password==='test-password')return json(200,{access_token:'test-staff',refresh_token:'test-refresh',expires_in:3600});
     return json(400,{error_code:'invalid_credentials'});
    }
-   if(url.pathname==='/auth/v1/logout')return json(200,{});
-   const fn=url.pathname.split('/').pop();const args={pilot_is_staff:[],pilot_queue_v2:[],pilot_track_booking_v2:['p_token'],pilot_available_slots:['p_date'],pilot_create_booking_v2:['p_request','p_key'],pilot_record_payment_v3:['p_order','p_amount','p_method','p_kind','p_key'],pilot_create_booking:['p_request','p_key'],pilot_track_booking:['p_token'],pilot_public_catalogue:[],pilot_marketing_consent:['p_order','p_opt_in'],pilot_withdraw_offers:['p_phone'],pilot_queue:[],pilot_update_order:['p_id','p_expected','p_action','p_amount']}[fn];
+   if(url.pathname==='/api/auth/logout')return json(200,{});
+   const order=url.pathname==='/api/orders';
+   const fn=order?'pilot_create_booking_v2':url.pathname.split('/').pop();const args={pilot_is_staff:[],pilot_queue_v2:[],pilot_track_booking_v2:['p_token'],pilot_available_slots:['p_date'],pilot_create_booking_v2:['p_request','p_key'],pilot_record_payment_v3:['p_order','p_amount','p_method','p_kind','p_key'],pilot_create_booking:['p_request','p_key'],pilot_track_booking:['p_token'],pilot_public_catalogue:[],pilot_marketing_consent:['p_order','p_opt_in'],pilot_withdraw_offers:['p_phone'],pilot_queue:[],pilot_update_order:['p_id','p_expected','p_action','p_amount']}[fn];
    if(!args)return json(404,{});
+   if(order){body={p_request:body.request,p_key:body.key};}
    const execute=async()=>{
     await db.exec('reset role');await db.query("select set_config('request.jwt.claim.sub',$1,false)",[req.headers.authorization==='Bearer test-staff'?uid:'']);
     await db.exec(req.headers.authorization==='Bearer test-staff'?'set role authenticated':'set role anon');

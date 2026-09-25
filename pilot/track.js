@@ -6,7 +6,7 @@
     $('error').hidden=true; $('refresh').disabled=true;
     try {
       if(!/^[a-f0-9-]{36}$/i.test(token)) throw new Error('This private link is incomplete. Please ask the counter team for help.');
-      const o=await PilotAPI.rpc('pilot_track_booking',{p_token:token});
+      const o=await PilotAPI.rpc('pilot_track_booking_v2',{p_token:token});
       if(!o) throw new Error('We could not find this job. Check your private link or ask the counter team.');
       $('title').textContent='Your request is saved.'; $('message').textContent='Keep this page or take a screenshot of your job number.';
       const stages=['Requested','Accepted','At the bench','Ready','Collected'];

@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const output = path.join(root, 'cloudflare-dist');
+const assetIgnore = path.join(root, '.assetsignore');
 const files = [
   'book/index.html', 'book/index.js', 'book/carousel.js', 'book/chatbot.js',
   'book/carousel.css', 'book/counter.css',
@@ -18,4 +19,5 @@ for (const relative of files) {
   await fs.mkdir(path.dirname(target), { recursive: true });
   await fs.copyFile(source, target);
 }
+await fs.copyFile(assetIgnore, path.join(output, '.assetsignore'));
 console.log(`Built ${files.length} allowlisted static files in cloudflare-dist.`);

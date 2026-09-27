@@ -40,19 +40,30 @@ function serviceRoleHeaders(env) {
   return new Headers({ apikey: key, Authorization: `Bearer ${key}` });
 }
 
-async function upstream(request, env, path, body, token, useServiceRole = false) {
+async function postgrestRpc(env, name, params, token, useServiceRole = false) {
   const headers = useServiceRole ? serviceRoleHeaders(env) : authHeaders(env, token);
-  if (path.startsWith('/rest/v1/rpc/')) {
-    headers.set(['GET', 'HEAD'].includes(request.method) ? 'Accept-Profile' : 'Content-Profile', 'public');
-  }
-  const init = { method: request.method, headers, redirect: 'manual' };
-  if (body !== undefined) {
-    headers.set('Content-Type', 'application/json');
-    init.body = JSON.stringify(body);
-  }
+  headers.set('Content-Type', 'application/json');
+  headers.set('Content-Profile', 'public');
+  return fetch(`${env.SUPABASE_URL.replace(/\/$/, '')}/rest/v1/rpc/${name}`, {
+    method: 'POST', headers, body: JSON.stringify(params ?? {}), redirect: 'manual',
+  });
+}
+
+async function upstream(request, env, path, body, token, useServiceRole = false) {
   let response;
   try {
-    response = await fetch(`${env.SUPABASE_URL.replace(/\/$/, '')}${path}`, init);
+    const rpc = path.match(/^\/rest\/v1\/rpc\/([a-z0-9_]+)$/i);
+    if (rpc) {
+      response = await postgrestRpc(env, rpc[1], body, token, useServiceRole);
+    } else {
+      const headers = useServiceRole ? serviceRoleHeaders(env) : authHeaders(env, token);
+      const init = { method: request.method, headers, redirect: 'manual' };
+      if (body !== undefined) {
+        headers.set('Content-Type', 'application/json');
+        init.body = JSON.stringify(body);
+      }
+      response = await fetch(`${env.SUPABASE_URL.replace(/\/$/, '')}${path}`, init);
+    }
   } catch {
     return json({ message: 'The database connection is unavailable.' }, 503);
   }
@@ -108,12 +119,7 @@ async function api(request, env, path) {
     if (request.method !== 'GET') return json({ message: 'Method not allowed.' }, 405);
     let ping;
     try {
-      const headers = authHeaders(env);
-      headers.set('Content-Type', 'application/json');
-      headers.set('Content-Profile', 'public');
-      ping = await fetch(`${env.SUPABASE_URL.replace(/\/$/, '')}/rest/v1/rpc/pilot_public_catalogue`, {
-        method: 'POST', headers, body: '{}',
-      });
+      ping = await postgrestRpc(env, 'pilot_public_catalogue', {}, undefined);
     } catch { return json({ status: 'unavailable' }, 503); }
     if (ping.ok) {
       await ping.body?.cancel();

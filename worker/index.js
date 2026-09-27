@@ -109,8 +109,20 @@ async function api(request, env, path) {
         method: 'POST', headers: authHeaders(env), body: '{}',
       });
     } catch { return json({ status: 'unavailable' }, 503); }
-    await ping.body?.cancel();
-    return ping.ok ? json({ status: 'ok' }) : json({ status: 'unavailable', upstream_status: ping.status }, 503);
+    if (ping.ok) {
+      await ping.body?.cancel();
+      return json({ status: 'ok' });
+    }
+    let upstreamCode;
+    try {
+      const error = await ping.json();
+      if (typeof error?.code === 'string' && /^PGRST\d{3}$/.test(error.code)) upstreamCode = error.code;
+    } catch {}
+    return json({
+      status: 'unavailable',
+      upstream_status: ping.status,
+      ...(upstreamCode ? { upstream_code: upstreamCode } : {}),
+    }, 503);
   }
 
   if (path === '/api/orders') {

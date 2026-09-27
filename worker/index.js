@@ -110,7 +110,7 @@ async function api(request, env, path) {
       });
     } catch { return json({ status: 'unavailable' }, 503); }
     await ping.body?.cancel();
-    return ping.ok ? json({ status: 'ok' }) : json({ status: 'unavailable' }, 503);
+    return ping.ok ? json({ status: 'ok' }) : json({ status: 'unavailable', upstream_status: ping.status }, 503);
   }
 
   if (path === '/api/orders') {

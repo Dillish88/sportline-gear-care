@@ -33,14 +33,62 @@ The live database was checked read-only on 27 September 2026: `pilot_create_book
 
 Vercel currently returns `404 NOT_FOUND` for `/db/pilot-staff.sql`; `.vercelignore` already excludes `db/`. Keep the expanded ignore entries for `worker/`, `scripts/`, `*.sql`, `wrangler.jsonc`, and `.assetsignore` in the merge. The legacy `/pilot/` route was also checked live: both Vercel and the Cloudflare Preview redirect it to `/book/`.
 
-## Production rollout — staged, approval required
+## Production rollout — Cloudflare Worker, staged and approval required
 
-1. Merge the Worker-compatible Vercel fallback, `.vercelignore` hardening, legacy booking-client cleanup, updated v2 tracker, and these notes. Verify the site and a legacy tracking link on Vercel before touching live permissions.
-2. After approval, apply `20260927_production_privileges_part_a.sql`. It checks that each staff function still contains `pilot_is_staff()`, removes v1 booking/tracking wrapper access, and preserves Vercel's current direct `pilot_create_booking_v2` access.
-3. Choose and deploy the production request path: Cloudflare Worker or a Vercel server function. Test booking, staff access, and tracking through that server path.
-4. Only after the live request path uses the server-side service-role credential, and after approval, apply `20260927_production_privileges_part_b.sql` to revoke direct `anon` and `authenticated` access to `pilot_create_booking_v2`.
+The selected production request path is the existing Phase 1 Cloudflare Worker. This is a runbook only: do not merge, change production settings, alter DNS, apply live SQL, or redirect live traffic until the owner approves that specific step. Keep Vercel and direct `pilot_create_booking_v2` access available until the Worker and old-link routing have been verified.
 
-The test-only migration `20260925_phase1_worker_booking_privileges.sql` still locks `pilot_create_booking_v2` for the Preview Worker. Do not replay it on production; production uses the staged Part A and Part B files above.
+### 1. Merge and verify the Vercel safety changes
+
+Merge `codex/phase-1-backend-foundation` to `main`, including the Worker-compatible Vercel fallback, `.vercelignore` hardening, legacy booking-client cleanup, updated v2 tracker, and these notes. Wait for Vercel's production deployment. Verify that the site loads, an existing live tracking link works, and `/db/pilot-staff.sql` returns 404.
+
+**Rollback:** promote the prior known-good Vercel deployment or revert the merge on `main`, then verify the live site and tracking again. Do not proceed to Part A until these checks pass.
+
+### 2. Apply live privilege migration Part A
+
+Only after Step 1 passes and the owner separately approves the live database change, apply `20260927_production_privileges_part_a.sql` to the live project. Before applying, save a read-only snapshot of effective EXECUTE access for the functions and roles changed by the migration. The migration checks that the staff functions still contain `pilot_is_staff()`, revokes the obsolete v1 booking/tracking wrappers, and leaves direct Vercel calls to `pilot_create_booking_v2` enabled. Retest a live booking and tracking link on Vercel.
+
+**Rollback:** if either Vercel flow fails, restore the pre-change effective EXECUTE grants from the saved snapshot (including any v1 wrapper grants that were present), then retest. If code also needs rollback, restore Vercel first and then restore the saved grants. Do not apply Part B as part of this rollback.
+
+### 3. Configure production credentials in Cloudflare
+
+In the `sportline-gear-care-phase1` Worker dashboard, under **Settings → Variables and Secrets → Production**, add `SUPABASE_URL` and `SUPABASE_ANON_KEY` as runtime Text variables and `SUPABASE_SERVICE_ROLE_KEY` as an encrypted Secret. Copy values directly from the live Supabase project in the dashboard; never put the service-role key in GitHub, `wrangler.jsonc`, browser code, or chat. Preview must continue to use only the `sportline-test` project.
+
+**Rollback:** remove or restore only the Production values added for this cutover and roll back the Worker deployment if needed. Vercel remains live and Part B remains unapplied, so its current direct booking path stays available.
+
+### 4. Bring up and test the production Worker address
+
+The selected production address is `https://care.sportlinestores.in`. Before changing nameservers, export the existing DNS records and verify that Cloudflare imported them correctly, especially current MX/TXT mail and domain-verification records. Change nameservers at the registrar only after approval and only once the required records are present. Wait until Cloudflare reports the zone Active. Do not edit or delete MX/TXT records in this step.
+
+After Production variables are in place, attach `care.sportlinestores.in` as a Custom Domain on the Production Worker. Cloudflare requires an active zone and creates the Worker DNS record and certificate. Check for an existing DNS record on `care` first; resolve any conflict only after approval. Test booking, tracking, staff login, and payment using an explicitly marked test booking. Confirm the resulting database records and cancel the test booking. Do not use a real customer's details. Keep the Vercel site serving customers throughout this step.
+
+**Rollback:** stop directing users to the Worker and roll back the Worker version or detach the custom hostname, restoring any DNS record that existed before the change. Vercel remains available and Part B is still unapplied. If a test payment creates an irreversible ledger entry, stop before recording it and get approval for a reversible test method.
+
+Once `care` is working, add Cloudflare redirects for only `sportlinestores.in` and `www.sportlinestores.in` to `https://care.sportlinestores.in`, preserving the original path and query string (enable **Preserve query string**). Use separate exact-host matches (or one rule matching only those two hosts); do not wildcard all subdomains, because that could catch `care` and loop. Both source hosts need proxied DNS records for Cloudflare Redirect Rules. If DNS review confirms the apex and `www` have no real web origin that must be retained, the prepared placeholder records for approval are:
+
+| Type | Name | IPv4 address | Proxy |
+| --- | --- | --- | --- |
+| A | `@` | `192.0.2.0` | Proxied (orange cloud) |
+| A | `www` | `192.0.2.0` | Proxied (orange cloud) |
+
+Cloudflare documents `192.0.2.0` as a placeholder for originless proxied redirect hosts. Do not create these records until the owner approves and the imported DNS records have been reviewed. Test with a temporary 307 first; after confirming path/query preservation, the owner may approve a permanent redirect. Leave MX/TXT records unchanged. This keeps the apex and `www` available for a future shop site by removing these redirects when that site is ready.
+
+**Rollback:** remove/disable the apex and `www` redirect rules. If those hosts had an existing website before this move, restore its prior DNS targets from the saved DNS snapshot. Do not change mail records as part of this rollback.
+
+### 5. Test old links through a Vercel redirect
+
+First deploy a **temporary 307** catch-all redirect from `sportline-gear-care.vercel.app` to `https://care.sportlinestores.in`, preserving `/:path*` and the query string. Vercel `vercel.json` redirects pass query strings through by default; include the wildcard path in the destination. Test an old QR prefill URL and an existing tracking URL and confirm both reach the matching page and retain their query values. Keep the redirect temporary during the verification period.
+
+After the 307 checks pass, and only with separate approval, change the redirect to a permanent 308. Permanent redirects can be cached by browsers, so reverting `vercel.json` may not return every previously visiting browser to Vercel. Keep the Worker available and healthy after the 308 cutover.
+
+**Rollback:** during 307 testing, remove the catch-all redirect and redeploy Vercel; the old Vercel site and direct booking path remain available. If a 308 has already been issued, remove the redirect for new requests but do not assume cached clients will return to Vercel; restore service on the Worker address while resolving the issue.
+
+### 6. Apply live privilege migration Part B last
+
+Only after Steps 1–5 pass and the owner separately approves, apply `20260927_production_privileges_part_b.sql` to live. It revokes direct `anon` and `authenticated` EXECUTE on `pilot_create_booking_v2` and leaves the Worker service-role call available. Verify that a direct browser RPC call using the publishable key fails and a Worker booking succeeds.
+
+**Rollback:** if the Worker is unhealthy, remove the Vercel catch-all redirect so the Vercel site serves pages again. Direct Vercel booking will remain blocked until the database grant is restored. Then explicitly grant EXECUTE on `public.pilot_create_booking_v2(jsonb,uuid)` to `anon` and `authenticated`, and verify bookings and tracking. Record that this restores public RPC access; re-apply Part B only after the Worker path is healthy and approved.
+
+The test-only migration `20260925_phase1_worker_booking_privileges.sql` locks `pilot_create_booking_v2` for the Preview Worker. Do not replay it on production; production uses the staged Part A and Part B files above.
 
 ## Open policy
 

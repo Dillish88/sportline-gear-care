@@ -1,6 +1,7 @@
 
 (function(){
 "use strict";
+var CFG=window.PILOT_CONFIG||{};
 var $=function(i){return document.getElementById(i)};
 var R=function(n){return "₹"+Number(n||0).toLocaleString("en-IN")};
 function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
@@ -15,8 +16,11 @@ var refreshing=null;
 function saveSess(s){ SESS=s; try{ s?localStorage.setItem(KEY,JSON.stringify(s)):localStorage.removeItem(KEY);}catch(e){} }
 function loadSess(){ try{ return JSON.parse(localStorage.getItem(KEY)); }catch(e){ return null; } }
 function authCall(grant,body){
-  return fetch("/api/auth/token?grant_type="+encodeURIComponent(grant),{method:"POST",signal:AbortSignal.timeout(20000),
-    headers:{"Content-Type":"application/json"},body:JSON.stringify(body)})
+  var direct=location.hostname==="sportline-gear-care.vercel.app"&&!!(CFG.url&&CFG.key),headers={"Content-Type":"application/json"};
+  if(direct)headers.apikey=CFG.key;
+  var path=direct?CFG.url+"/auth/v1/token?grant_type="+encodeURIComponent(grant):"/api/auth/token?grant_type="+encodeURIComponent(grant);
+  return fetch(path,{method:"POST",signal:AbortSignal.timeout(20000),
+    headers:headers,body:JSON.stringify(body)})
   .then(function(r){return r.json().then(function(j){
     if(!r.ok) throw new Error(j.error_description||j.msg||j.message||"Sign-in failed.");
     return {access_token:j.access_token,refresh_token:j.refresh_token,
@@ -33,11 +37,15 @@ function fresh(){
     .catch(function(e){ signOut(); throw new Error("Your session ended. Please sign in again."); }).finally(function(){refreshing=null;});
   return refreshing;
 }
-/* Staff calls go through the same-origin API with the staff member's own token. */
+/* Vercel uses direct authenticated RPCs; Cloudflare uses its same-origin API. */
 function rpc(fn,body){
   return fresh().then(function(s){
-    return fetch("/api/rpc/"+encodeURIComponent(fn),{method:"POST",signal:AbortSignal.timeout(20000),
-      headers:{"Authorization":"Bearer "+s.access_token,"Content-Type":"application/json"},
+    var direct=location.hostname==="sportline-gear-care.vercel.app"&&!!(CFG.url&&CFG.key),headers={"Content-Type":"application/json"};
+    if(direct)headers.apikey=CFG.key;
+    headers.Authorization="Bearer "+s.access_token;
+    var path=direct?CFG.url+"/rest/v1/rpc/"+encodeURIComponent(fn):"/api/rpc/"+encodeURIComponent(fn);
+    return fetch(path,{method:"POST",signal:AbortSignal.timeout(20000),
+      headers:headers,
       body:JSON.stringify(body||{})});
   }).then(function(r){return r.text().then(function(t){
     var j=null; try{j=t?JSON.parse(t):null}catch(e){}
@@ -47,7 +55,7 @@ function rpc(fn,body){
 function signOut(){
   EPOCH++;OPEN=null;SEEN=null;$("jobs").replaceChildren();$("slip").replaceChildren();$("password").value="";
   if(timer){clearInterval(timer);timer=null;}
-  if(SESS){ fetch("/api/auth/logout",{method:"POST",signal:AbortSignal.timeout(20000),headers:{"Authorization":"Bearer "+SESS.access_token}}).catch(function(){}); }
+  if(SESS){ var direct=location.hostname==="sportline-gear-care.vercel.app"&&!!(CFG.url&&CFG.key),headers={"Authorization":"Bearer "+SESS.access_token};if(direct)headers.apikey=CFG.key;fetch(direct?CFG.url+"/auth/v1/logout":"/api/auth/logout",{method:"POST",signal:AbortSignal.timeout(20000),headers:headers}).catch(function(){}); }
   saveSess(null); JOBS=[]; $("board").hidden=true; $("login").hidden=false; $("signout").hidden=true; $("who").textContent="";
 }
 $("signout").onclick=signOut;

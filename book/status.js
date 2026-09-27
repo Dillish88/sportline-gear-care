@@ -1,6 +1,7 @@
 
 (function(){
 "use strict";
+var CFG=window.PILOT_CONFIG||{};
 var $=function(i){return document.getElementById(i)};
 var R=function(n){return "₹"+Number(n||0).toLocaleString("en-IN")};
 function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
@@ -19,8 +20,11 @@ var token=(location.hash.match(/(?:t=)?([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9
 function load(){
   if(!token){ $("app").innerHTML='<div class="msg">This link is incomplete. Use the full link from your booking message.</div>'; return; }
   function call(fn,body){
-    return fetch("/api/rpc/"+encodeURIComponent(fn),{method:"POST",signal:AbortSignal.timeout(20000),
-      headers:{"Content-Type":"application/json"},body:JSON.stringify(body)})
+    var direct=location.hostname==="sportline-gear-care.vercel.app"&&!!(CFG.url&&CFG.key),headers={"Content-Type":"application/json"};
+    if(direct)headers.apikey=CFG.key;
+    var path=direct?CFG.url+"/rest/v1/rpc/"+encodeURIComponent(fn):"/api/rpc/"+encodeURIComponent(fn);
+    return fetch(path,{method:"POST",signal:AbortSignal.timeout(20000),
+      headers:headers,body:JSON.stringify(body)})
     .then(function(r){if(!r.ok)throw new Error("Unable to load");return r.json()});
   }
   call("pilot_track_booking_v2",{p_token:token})

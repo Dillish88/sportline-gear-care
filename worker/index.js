@@ -204,6 +204,11 @@ export default {
   async fetch(request, env) {
     const url = new URL(request.url);
     if (url.pathname.startsWith('/api/')) return api(request, env, url.pathname);
+    if (url.pathname === '/pilot/config.js') {
+      return new Response('window.PILOT_CONFIG = { enabled: true, qrOrigin: null };', {
+        headers: { 'Content-Type': 'application/javascript; charset=utf-8', 'Cache-Control': 'no-store' },
+      });
+    }
     if (['/', '/index.html', '/concept', '/concept/', '/gear-care.html', '/stringing.html'].includes(url.pathname)) {
       return redirect(url, '/book/');
     }

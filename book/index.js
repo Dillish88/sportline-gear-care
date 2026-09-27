@@ -1,17 +1,21 @@
 
 (function(){
 "use strict";
-var CFG={shopWA:"918056436668"};
+var CFG=window.PILOT_CONFIG||{};
+CFG.shopWA="918056436668";
 var $=function(i){return document.getElementById(i)};
 var R=function(n){return "₹"+Number(n||0).toLocaleString("en-IN")};
 var qs=new URLSearchParams(location.search);
 var SRC=(qs.get("src")||"").replace(/[\u0000-\u001f\u007f]/g," ").trim().slice(0,100);
 
 function rpc(fn,body){
-  var path=fn==="pilot_create_booking_v2"?"/api/orders":"/api/rpc/"+encodeURIComponent(fn);
-  var payload=fn==="pilot_create_booking_v2"?{request:body.p_request,key:body.p_key}:body||{};
+  var direct=location.hostname==="sportline-gear-care.vercel.app"&&!!(CFG.url&&CFG.key);
+  var path=direct?CFG.url+"/rest/v1/rpc/"+encodeURIComponent(fn):fn==="pilot_create_booking_v2"?"/api/orders":"/api/rpc/"+encodeURIComponent(fn);
+  var payload=direct?body||{}:fn==="pilot_create_booking_v2"?{request:body.p_request,key:body.p_key}:body||{};
+  var headers={"Content-Type":"application/json"};
+  if(direct)headers.apikey=CFG.key;
   return fetch(path,{method:"POST",signal:AbortSignal.timeout(20000),
-    headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)})
+    headers:headers,body:JSON.stringify(payload)})
   .then(function(r){return r.text().then(function(t){
     var j=null; try{j=t?JSON.parse(t):null}catch(e){}
     if(!r.ok) throw new Error((j&&(j.message||j.hint))||"Something went wrong. Please try again.");

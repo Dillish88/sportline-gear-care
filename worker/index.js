@@ -42,6 +42,9 @@ function serviceRoleHeaders(env) {
 
 async function upstream(request, env, path, body, token, useServiceRole = false) {
   const headers = useServiceRole ? serviceRoleHeaders(env) : authHeaders(env, token);
+  if (path.startsWith('/rest/v1/rpc/')) {
+    headers.set(['GET', 'HEAD'].includes(request.method) ? 'Accept-Profile' : 'Content-Profile', 'public');
+  }
   const init = { method: request.method, headers, redirect: 'manual' };
   if (body !== undefined) {
     headers.set('Content-Type', 'application/json');
@@ -105,8 +108,11 @@ async function api(request, env, path) {
     if (request.method !== 'GET') return json({ message: 'Method not allowed.' }, 405);
     let ping;
     try {
+      const headers = authHeaders(env);
+      headers.set('Content-Type', 'application/json');
+      headers.set('Content-Profile', 'public');
       ping = await fetch(`${env.SUPABASE_URL.replace(/\/$/, '')}/rest/v1/rpc/pilot_public_catalogue`, {
-        method: 'POST', headers: authHeaders(env), body: '{}',
+        method: 'POST', headers, body: '{}',
       });
     } catch { return json({ status: 'unavailable' }, 503); }
     if (ping.ok) {

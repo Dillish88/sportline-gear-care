@@ -1,0 +1,21 @@
+# Keep repository metadata, database scripts, and build internals out of static uploads.
+.git/
+**/.git/
+**/.git/**
+*.sql
+**/*.sql
+.env*
+**/.env*
+node_modules/
+**/node_modules/**
+.wrangler/
+**/.wrangler/**
+tests/
+**/tests/**
+worker/
+scripts/
+wrangler.jsonc
+wrangler.toml
+package.json
+package-lock.json
+CLOUDFLARE.md

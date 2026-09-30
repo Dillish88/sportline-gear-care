@@ -129,12 +129,13 @@ begin
   return jsonb_build_object('code',o.code,'token',o.receipt_token,'estimate',o.estimate,'needs_quote',o.needs_quote,'status',o.status,'slot_date',o.slot_date,'slot_start',to_char(o.slot_start,'HH24:MI'),'ready_by',to_char(o.promised_ready_at at time zone 'Asia/Kolkata','HH24:MI'),'urgent',o.urgent);
 end $$;
 revoke all on function public.pilot_create_booking_v2(jsonb,uuid) from public,anon,authenticated;
-grant execute on function public.pilot_create_booking_v2(jsonb,uuid) to anon,authenticated;
+grant execute on function public.pilot_create_booking_v2(jsonb,uuid) to service_role;
 
 
 -- The legacy endpoint must enforce the same slot rules.
 create or replace function public.pilot_create_booking(p_request jsonb,p_key uuid) returns jsonb
 language sql security definer set search_path='' as $$ select public.pilot_create_booking_v2(p_request,p_key) $$;
+revoke all on function public.pilot_create_booking(jsonb,uuid) from public,anon,authenticated,service_role;
 
 create or replace function public.pilot_record_payment_v3(p_order uuid,p_amount integer,p_method text,p_kind text,p_key uuid) returns jsonb
 language plpgsql security definer set search_path='' as $$
@@ -216,6 +217,7 @@ revoke all on function public.pilot_track_booking_v2(uuid) from public,anon,auth
 grant execute on function public.pilot_track_booking_v2(uuid) to anon,authenticated;
 create or replace function public.pilot_track_booking(p_token uuid) returns jsonb
 language sql stable security definer set search_path='' as $$ select public.pilot_track_booking_v2(p_token) $$;
+revoke all on function public.pilot_track_booking(uuid) from public,anon,authenticated,service_role;
 create or replace function public.pilot_queue_v2() returns jsonb language sql stable security definer set search_path='' as $$ select public.pilot_queue() $$;
 revoke all on function public.pilot_queue_v2() from public,anon,authenticated;
 grant execute on function public.pilot_queue_v2() to authenticated;

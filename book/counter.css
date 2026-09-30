@@ -7,3 +7,4 @@
 .counter-details summary{cursor:pointer;min-height:40px;color:var(--muted);font-size:13px;font-weight:700;padding:8px 0}
 .counter-details .acts{margin-top:8px}.counter-details .grid2{margin-top:10px}
 @media(max-width:600px){.stats{grid-template-columns:repeat(2,minmax(0,1fr))}.counter-money span{padding:9px}.counter-money b{font-size:18px}.jh{grid-template-columns:90px minmax(0,1fr)}}
+.bot-field{position:absolute!important;left:-10000px!important;top:auto!important;width:1px!important;height:1px!important;overflow:hidden!important}

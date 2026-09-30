@@ -5,6 +5,12 @@ github.md
 uploads/
 SPEC.md
 db/
+worker/
+scripts/
+*.sql
+**/*.sql
+wrangler.jsonc
+.assetsignore
 tests/
 tools/
 **/README.md

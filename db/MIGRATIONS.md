@@ -37,6 +37,14 @@ Vercel currently returns `404 NOT_FOUND` for `/db/pilot-staff.sql`; `.verceligno
 
 The selected production request path is the existing Phase 1 Cloudflare Worker. This is a runbook only: do not merge, change production settings, alter DNS, apply live SQL, or redirect live traffic until the owner approves that specific step. Keep Vercel and direct `pilot_create_booking_v2` access available until the Worker and old-link routing have been verified.
 
+**Required QR regressions at Step 1 and every later cutover gate:** open each exact URL below in a browser, follow redirects, confirm the service chooser loads, select a service, then confirm the booking form has the named shop selected and its request carries the stated `src` value. At gates that include a live booking test, also verify that the saved booking records that `src` value; identify and cancel test bookings so they do not occupy customer slots.
+
+| Printed/current link | Expected shop | Expected `src` |
+| --- | --- | --- |
+| `https://sportline-gear-care.vercel.app/pilot/?shop=6th&src=counter-6th#booking` | 6th Avenue | `counter-6th` |
+| `https://sportline-gear-care.vercel.app/pilot/?shop=5th&src=counter-5th#booking` | 5th Avenue | `counter-5th` |
+| `https://sportline-gear-care.vercel.app/book/?shop=6th&src=counter-6th#booking` | 6th Avenue | `counter-6th` |
+
 ### 1. Merge and verify the Vercel safety changes
 
 Merge `codex/phase-1-backend-foundation` to `main`, including the Worker-compatible Vercel fallback, `.vercelignore` hardening, legacy booking-client cleanup, updated v2 tracker, and these notes. Wait for Vercel's production deployment. Verify that the site loads, an existing live tracking link works, and `/db/pilot-staff.sql` returns 404.
